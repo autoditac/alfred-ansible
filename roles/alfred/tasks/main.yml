@@ -6,6 +6,49 @@
     update_cache: true
   tags: [packages]
 
+# --- OS tuning ---
+
+- name: Remove stale cpufreq governor from kernel cmdline
+  ansible.builtin.replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: ' ?cpufreq\.default_governor=\S+'
+    replace: ''
+  tags: [tuning]
+
+- name: Check if cpufreq governor is set in kernel cmdline
+  ansible.builtin.command:
+    cmd: grep -q 'cpufreq.default_governor=performance' /boot/firmware/cmdline.txt
+  register: _cpufreq_check
+  changed_when: false
+  failed_when: false
+  tags: [tuning]
+
+- name: Append cpufreq governor to kernel cmdline
+  ansible.builtin.replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: '(\S)\s*$'
+    replace: '\1 cpufreq.default_governor=performance'
+  when: _cpufreq_check.rc != 0
+  tags: [tuning]
+
+- name: Set vm.swappiness via sysctl
+  ansible.builtin.copy:
+    content: "vm.swappiness={{ alfred_vm_swappiness }}\n"
+    dest: /etc/sysctl.d/99-sunray.conf
+    mode: "0644"
+  notify: Reload sysctl
+  tags: [tuning]
+
+- name: Ensure boot config lines are present
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    line: "{{ item }}"
+    state: present
+  loop: "{{ alfred_boot_config_lines }}"
+  tags: [tuning]
+
+# --- OpenOCD / MCU ---
+
 - name: Create MCU directory
   ansible.builtin.file:
     path: "{{ alfred_mcu_dir }}"

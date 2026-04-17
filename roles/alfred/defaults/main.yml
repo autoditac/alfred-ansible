@@ -31,5 +31,12 @@ alfred_swd_gpio:
     chip: 0
     driver: sysfsgpio
 
+# OS tuning
+alfred_vm_swappiness: 10
+alfred_boot_config_lines:
+  - usb_max_current_enable=1
+  - dtparam=uart0=on
+  - enable_uart=1
+
 # MCU firmware binary (set via --extra-vars or leave empty to skip flash)
 alfred_firmware_bin: ""
