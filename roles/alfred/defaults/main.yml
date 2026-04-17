@@ -33,6 +33,8 @@ alfred_swd_gpio:
 
 # OS tuning
 alfred_vm_swappiness: 10
+alfred_wifi_regdomain: DK
+alfred_wifi_band: bg
 alfred_boot_config_lines:
   - usb_max_current_enable=1
   - dtparam=uart0=on

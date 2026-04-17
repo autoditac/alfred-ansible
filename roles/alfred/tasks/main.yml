@@ -40,6 +40,30 @@
   loop: "{{ alfred_boot_config_lines }}"
   tags: [tuning]
 
+- name: Disable WiFi power save via NetworkManager
+  ansible.builtin.copy:
+    content: |
+      [connection]
+      wifi.powersave = 2
+    dest: /etc/NetworkManager/conf.d/wifi-powersave.conf
+    mode: "0644"
+  notify: Restart NetworkManager
+  tags: [tuning]
+
+- name: Set WiFi band preference
+  ansible.builtin.command:
+    cmd: nmcli con modify preconfigured 802-11-wireless.band {{ alfred_wifi_band }}
+  changed_when: true
+  notify: Restart NetworkManager
+  tags: [tuning]
+
+- name: Set WiFi regulatory domain in kernel cmdline
+  ansible.builtin.replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: 'cfg80211\.ieee80211_regdom=\S+'
+    replace: "cfg80211.ieee80211_regdom={{ alfred_wifi_regdomain }}"
+  tags: [tuning]
+
 # --- OpenOCD / MCU ---
 
 - name: Create MCU directory
