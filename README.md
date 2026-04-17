@@ -1,6 +1,28 @@
 # Ansible Role: Alfred
 
-Configures a Raspberry Pi (or BananaPi) to run Alfred mower services.
+Configures a Raspberry Pi to run Alfred mower services as rootless Podman
+containers, managed by systemd Quadlet units.
+
+## Prerequisites
+
+- Raspberry Pi 4B with 4 GB RAM
+- Debian Trixie (13) — Raspberry Pi OS Lite (64-bit)
+- SSH access with sudo privileges
+
+## Differences from stock Ardumower/Sunray setup
+
+- **All services run in containers** — Sunray, CaSSAndRA, and Alfred Dashboard
+  are deployed as Podman containers via systemd Quadlet files. Nothing is
+  installed natively on the host besides Podman and OpenOCD.
+- **Everything runs on the rover** — no separate server or desktop needed for
+  normal operation. The RPi hosts all services.
+- **CaSSAndRA is the primary interface** — used for map management, mowing
+  jobs, and rover control. The official Sunray Android/iOS app is **not
+  supported** with this setup (no direct TCP socket exposed).
+- **WiFi tuned for outdoor use** — power save disabled, 2.4 GHz band preferred,
+  regulatory domain set to DK.
+- **CPU governor locked to performance** — no frequency scaling, consistent
+  loop timing for Sunray.
 
 ## What it does
 
