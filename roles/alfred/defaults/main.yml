@@ -11,8 +11,7 @@ alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:latest
 alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
 
 # Paths
-alfred_base_dir: /home/pi/Sunray/alfred
-alfred_firmware_dir: /home/pi/sunray_install/firmware
+alfred_mcu_dir: /home/pi/alfred-mcu
 alfred_quadlet_dir: /etc/containers/systemd
 
 # SWD GPIO mapping per board type

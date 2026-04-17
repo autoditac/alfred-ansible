@@ -6,49 +6,26 @@
     update_cache: true
   tags: [packages]
 
-- name: Create firmware directory
+- name: Create MCU directory
   ansible.builtin.file:
-    path: "{{ alfred_firmware_dir }}"
+    path: "{{ alfred_mcu_dir }}"
     state: directory
     owner: pi
     group: pi
     mode: "0755"
   tags: [openocd, firmware]
 
-- name: Create OpenOCD config directory
-  ansible.builtin.file:
-    path: "{{ alfred_base_dir }}/config_files/openocd"
-    state: directory
-    owner: pi
-    group: pi
-    mode: "0755"
-  tags: [openocd]
-
-- name: Deploy SWD OpenOCD config
+- name: Deploy OpenOCD configs
   ansible.builtin.template:
-    src: swd-pi.ocd.j2
-    dest: "{{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd"
+    src: "{{ item }}"
+    dest: "{{ alfred_mcu_dir }}/{{ item | replace('.j2', '') }}"
     owner: pi
     group: pi
     mode: "0644"
-  tags: [openocd]
-
-- name: Deploy flash script
-  ansible.builtin.copy:
-    src: flash-sunray-compat.ocd
-    dest: "{{ alfred_base_dir }}/config_files/openocd/flash-sunray-compat.ocd"
-    owner: pi
-    group: pi
-    mode: "0644"
-  tags: [openocd]
-
-- name: Deploy save-firmware script
-  ansible.builtin.copy:
-    src: save-firmware.ocd
-    dest: "{{ alfred_base_dir }}/config_files/openocd/save-firmware.ocd"
-    owner: pi
-    group: pi
-    mode: "0644"
+  loop:
+    - swd-pi.ocd.j2
+    - flash.ocd.j2
+    - save-firmware.ocd.j2
   tags: [openocd]
 
 - name: Deploy Quadlet container files
@@ -88,7 +65,7 @@
 - name: Copy firmware binary
   ansible.builtin.copy:
     src: "{{ alfred_firmware_bin }}"
-    dest: "{{ alfred_firmware_dir }}/rm18.ino.bin"
+    dest: "{{ alfred_mcu_dir }}/rm18.ino.bin"
     mode: "0644"
   when: alfred_firmware_bin | length > 0
   tags: [firmware]
@@ -97,8 +74,8 @@
   ansible.builtin.command:
     cmd: >-
       openocd
-      -f {{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd
-      -f {{ alfred_base_dir }}/config_files/openocd/save-firmware.ocd
+      -f {{ alfred_mcu_dir }}/swd-pi.ocd
+      -f {{ alfred_mcu_dir }}/save-firmware.ocd
   when: alfred_firmware_bin | length > 0
   tags: [firmware]
 
@@ -113,8 +90,8 @@
   ansible.builtin.command:
     cmd: >-
       openocd
-      -f {{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd
-      -f {{ alfred_base_dir }}/config_files/openocd/flash-sunray-compat.ocd
+      -f {{ alfred_mcu_dir }}/swd-pi.ocd
+      -f {{ alfred_mcu_dir }}/flash.ocd
   when: alfred_firmware_bin | length > 0
   tags: [firmware]
 
