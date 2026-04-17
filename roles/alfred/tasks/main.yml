@@ -137,6 +137,13 @@
     - alfred-dashboard.service
   tags: [services]
 
+- name: Enable Podman auto-update timer
+  ansible.builtin.systemd:
+    name: podman-auto-update.timer
+    enabled: true
+    state: started
+  tags: [services]
+
 # MCU firmware flash (optional — only when binary is provided)
 - name: Copy firmware binary
   ansible.builtin.copy:
