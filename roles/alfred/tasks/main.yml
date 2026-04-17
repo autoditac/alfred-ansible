@@ -8,27 +8,20 @@
 
 # --- OS tuning ---
 
-- name: Remove stale cpufreq governor from kernel cmdline
-  ansible.builtin.replace:
-    path: /boot/firmware/cmdline.txt
-    regexp: ' ?cpufreq\.default_governor=\S+'
-    replace: ''
+- name: Deploy CPU performance governor service
+  ansible.builtin.copy:
+    src: cpu-performance.service
+    dest: /etc/systemd/system/cpu-performance.service
+    mode: "0644"
+  notify: Reload systemd
   tags: [tuning]
 
-- name: Check if cpufreq governor is set in kernel cmdline
-  ansible.builtin.command:
-    cmd: grep -q 'cpufreq.default_governor=performance' /boot/firmware/cmdline.txt
-  register: _cpufreq_check
-  changed_when: false
-  failed_when: false
-  tags: [tuning]
-
-- name: Append cpufreq governor to kernel cmdline
-  ansible.builtin.replace:
-    path: /boot/firmware/cmdline.txt
-    regexp: '(\S)\s*$'
-    replace: '\1 cpufreq.default_governor=performance'
-  when: _cpufreq_check.rc != 0
+- name: Enable CPU performance governor service
+  ansible.builtin.systemd:
+    name: cpu-performance.service
+    enabled: true
+    state: started
+    daemon_reload: true
   tags: [tuning]
 
 - name: Set vm.swappiness via sysctl
