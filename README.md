@@ -5,8 +5,8 @@ containers, managed by systemd Quadlet units.
 
 ## Prerequisites
 
-- Raspberry Pi 4B with 4 GB RAM
-- Debian Trixie (13) — Raspberry Pi OS Lite (64-bit)
+- BananaPi on the Alfred replaced with Raspberry Pi 4B with 4 GB RAM
+- Debian Trixie (13) — Raspberry Pi OS Lite (64-bit) installed on the RPi4b
 - SSH access with sudo privileges
 
 ## Differences from stock Ardumower/Sunray setup
@@ -45,13 +45,13 @@ alfred_mcu: main          # main | perimeter (selects SRST pin)
 
 ```bash
 # Full setup
-ansible-playbook -i inventory.yml site.yml --limit batman
+ansible-playbook -i inventory.yml site.yml --limit <mower>
 
 # Just deploy services
-ansible-playbook -i inventory.yml site.yml --limit batman --tags services
+ansible-playbook -i inventory.yml site.yml --limit <mower> --tags services
 
 # Flash MCU firmware (provide pre-compiled .bin)
-ansible-playbook -i inventory.yml site.yml --limit batman --tags firmware \
+ansible-playbook -i inventory.yml site.yml --limit <mower> --tags firmware \
   -e alfred_firmware_bin=/tmp/rm18-build/rm18.ino.bin
 ```
 

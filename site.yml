@@ -3,7 +3,7 @@
 # Configures a Raspberry Pi (or BananaPi) to run Alfred mower services.
 #
 # Usage:
-#   ansible-playbook -i inventory.yml site.yml --limit batman
+#   ansible-playbook -i inventory.yml site.yml --limit <mower>
 #
 # Tags:
 #   packages  - Install system packages

@@ -3,13 +3,13 @@ all:
   children:
     mowers:
       hosts:
-        batman:
-          ansible_host: 192.168.2.172
+        mower-a:
+          ansible_host: 192.168.x.x
           ansible_user: pi
           alfred_board: rpi4       # rpi4 | bananapi
           alfred_mcu: main         # main | perimeter
-        # robin:
-        #   ansible_host: 192.168.2.xxx
+        # mower-b:
+        #   ansible_host: 192.168.x.x
         #   ansible_user: pi
         #   alfred_board: rpi4
         #   alfred_mcu: main
