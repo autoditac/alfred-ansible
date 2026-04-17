@@ -8,7 +8,7 @@ Configures a Raspberry Pi (or BananaPi) to run Alfred mower services.
 |---|---|
 | `packages` | Install podman, openocd, libgpiod2 |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
-| `services` | Deploy Podman Quadlet files, enable services |
+| `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |
 | `firmware` | Backup + flash MCU firmware (when `alfred_firmware_bin` is set) |
 
 ## Inventory variables

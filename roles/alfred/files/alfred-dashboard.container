@@ -1,0 +1,22 @@
+[Unit]
+Description=Alfred Dashboard (status & control UI)
+After=network-online.target sunray.service
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/autoditac/alfred-dashboard:latest
+ContainerName=alfred-dashboard
+Network=host
+Environment=SUNRAY_HOST=127.0.0.1
+Environment=SUNRAY_PORT=80
+Environment=PORT=3000
+Environment=TZ=Europe/Copenhagen
+AutoUpdate=registry
+PodmanArgs=--init
+
+[Service]
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target default.target
