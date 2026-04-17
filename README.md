@@ -36,5 +36,6 @@ ansible-playbook -i inventory.yml site.yml --limit batman --tags firmware \
 ## MCU compilation
 
 The STM32 firmware must be compiled on an x86_64 host (no arm64 toolchain
-available). See [docs/system-setup.md](../../docs/system-setup.md) for
-arduino-cli setup and compilation instructions.
+available). See the Sunray repo
+[docs/system-setup.md](https://github.com/autoditac/Sunray/blob/main/docs/system-setup.md)
+for arduino-cli setup and compilation instructions.
