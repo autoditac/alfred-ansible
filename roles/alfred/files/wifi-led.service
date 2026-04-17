@@ -1,0 +1,17 @@
+[Unit]
+Description=Set ACT LED to WiFi link/activity indicator
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '\
+  modprobe ledtrig-netdev && \
+  echo netdev > /sys/class/leds/ACT/trigger && \
+  echo wlan0  > /sys/class/leds/ACT/device_name && \
+  echo 1      > /sys/class/leds/ACT/link && \
+  echo 1      > /sys/class/leds/ACT/rx && \
+  echo 1      > /sys/class/leds/ACT/tx'
+
+[Install]
+WantedBy=multi-user.target

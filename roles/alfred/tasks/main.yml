@@ -64,6 +64,22 @@
     replace: "cfg80211.ieee80211_regdom={{ alfred_wifi_regdomain }}"
   tags: [tuning]
 
+- name: Deploy WiFi LED indicator service
+  ansible.builtin.copy:
+    src: wifi-led.service
+    dest: /etc/systemd/system/wifi-led.service
+    mode: "0644"
+  notify: Reload systemd
+  tags: [tuning]
+
+- name: Enable WiFi LED indicator service
+  ansible.builtin.systemd:
+    name: wifi-led.service
+    enabled: true
+    state: started
+    daemon_reload: true
+  tags: [tuning]
+
 # --- OpenOCD / MCU ---
 
 - name: Create MCU directory
