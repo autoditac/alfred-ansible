@@ -1,0 +1,14 @@
+# This is an OpenOCD script that dumps the current MCU firmware to a file.
+
+init
+targets
+reset halt
+
+echo "----Dumping flash image to file----"
+
+flash list
+
+# dump 512KB from bank0
+flash read_bank 0 /home/pi/sunray_install/firmware/dump.bin 0x0 0x80000
+
+exit

@@ -1,0 +1,18 @@
+---
+# Ansible role: alfred
+# Configures a Raspberry Pi (or BananaPi) to run Alfred mower services.
+#
+# Usage:
+#   ansible-playbook -i inventory.yml site.yml --limit batman
+#
+# Tags:
+#   packages  - Install system packages
+#   openocd   - Deploy OpenOCD SWD configs
+#   services  - Deploy Podman Quadlet service files
+#   firmware  - Flash MCU firmware (requires pre-built .bin)
+
+- name: Alfred mower setup
+  hosts: mowers
+  become: true
+  roles:
+    - alfred

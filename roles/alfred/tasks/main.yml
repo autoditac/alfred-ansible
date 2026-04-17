@@ -1,0 +1,109 @@
+---
+- name: Install system packages
+  ansible.builtin.apt:
+    name: "{{ alfred_packages }}"
+    state: present
+    update_cache: true
+  tags: [packages]
+
+- name: Create firmware directory
+  ansible.builtin.file:
+    path: "{{ alfred_firmware_dir }}"
+    state: directory
+    owner: pi
+    group: pi
+    mode: "0755"
+  tags: [openocd, firmware]
+
+- name: Create OpenOCD config directory
+  ansible.builtin.file:
+    path: "{{ alfred_base_dir }}/config_files/openocd"
+    state: directory
+    owner: pi
+    group: pi
+    mode: "0755"
+  tags: [openocd]
+
+- name: Deploy SWD OpenOCD config
+  ansible.builtin.template:
+    src: swd-pi.ocd.j2
+    dest: "{{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd"
+    owner: pi
+    group: pi
+    mode: "0644"
+  tags: [openocd]
+
+- name: Deploy flash script
+  ansible.builtin.copy:
+    src: flash-sunray-compat.ocd
+    dest: "{{ alfred_base_dir }}/config_files/openocd/flash-sunray-compat.ocd"
+    owner: pi
+    group: pi
+    mode: "0644"
+  tags: [openocd]
+
+- name: Deploy save-firmware script
+  ansible.builtin.copy:
+    src: save-firmware.ocd
+    dest: "{{ alfred_base_dir }}/config_files/openocd/save-firmware.ocd"
+    owner: pi
+    group: pi
+    mode: "0644"
+  tags: [openocd]
+
+- name: Deploy Sunray Quadlet container file
+  ansible.builtin.copy:
+    src: sunray.container
+    dest: "{{ alfred_quadlet_dir }}/sunray.container"
+    mode: "0644"
+  notify: Reload systemd
+  tags: [services]
+
+- name: Ensure sunray service is enabled and started
+  ansible.builtin.systemd:
+    name: sunray.service
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags: [services]
+
+# MCU firmware flash (optional — only when binary is provided)
+- name: Copy firmware binary
+  ansible.builtin.copy:
+    src: "{{ alfred_firmware_bin }}"
+    dest: "{{ alfred_firmware_dir }}/rm18.ino.bin"
+    mode: "0644"
+  when: alfred_firmware_bin | length > 0
+  tags: [firmware]
+
+- name: Backup current MCU firmware
+  ansible.builtin.command:
+    cmd: >-
+      openocd
+      -f {{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd
+      -f {{ alfred_base_dir }}/config_files/openocd/save-firmware.ocd
+  when: alfred_firmware_bin | length > 0
+  tags: [firmware]
+
+- name: Stop sunray for MCU flash
+  ansible.builtin.systemd:
+    name: sunray.service
+    state: stopped
+  when: alfred_firmware_bin | length > 0
+  tags: [firmware]
+
+- name: Flash MCU firmware
+  ansible.builtin.command:
+    cmd: >-
+      openocd
+      -f {{ alfred_base_dir }}/config_files/openocd/swd-pi.ocd
+      -f {{ alfred_base_dir }}/config_files/openocd/flash-sunray-compat.ocd
+  when: alfred_firmware_bin | length > 0
+  tags: [firmware]
+
+- name: Start sunray after MCU flash
+  ansible.builtin.systemd:
+    name: sunray.service
+    state: started
+  when: alfred_firmware_bin | length > 0
+  tags: [firmware]

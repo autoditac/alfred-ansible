@@ -1,0 +1,36 @@
+---
+# System packages
+alfred_packages:
+  - podman
+  - openocd
+  - libgpiod2
+
+# Podman image references
+alfred_sunray_image: ghcr.io/autoditac/sunray:latest
+alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:latest
+alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
+
+# Paths
+alfred_base_dir: /home/pi/Sunray/alfred
+alfred_firmware_dir: /home/pi/sunray_install/firmware
+alfred_quadlet_dir: /etc/containers/systemd
+
+# SWD GPIO mapping per board type
+alfred_swd_gpio:
+  rpi4:
+    swdio: 24
+    swclk: 25
+    srst_main: 23
+    srst_peri: 20
+    chip: 0
+    driver: linuxgpiod
+  bananapi:
+    swdio: 10
+    swclk: 47
+    srst_main: 11
+    srst_peri: 20
+    chip: 0
+    driver: sysfsgpio
+
+# MCU firmware binary (set via --extra-vars or leave empty to skip flash)
+alfred_firmware_bin: ""

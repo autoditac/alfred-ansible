@@ -1,0 +1,31 @@
+# Sunray Quadlet container unit
+#
+# Deploy to mower:
+#   scp sunray.container <mower>:/etc/containers/systemd/sunray.container
+#   ssh <mower> "systemctl daemon-reload && systemctl start sunray"
+#
+# Replace GITHUB_USER below with your GitHub username.
+# Image is built by GitHub Actions and pushed to ghcr.io.
+
+[Unit]
+Description=Sunray mower firmware
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/autoditac/sunray:latest
+ContainerName=sunray
+Network=host
+SecurityLabelDisable=true
+PodmanArgs=--privileged
+Volume=sunray-data:/opt/sunray/data
+Volume=/dev/serial:/dev/serial:ro
+Environment=TZ=Europe/Copenhagen
+AutoUpdate=registry
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
