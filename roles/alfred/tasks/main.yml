@@ -137,11 +137,38 @@
     - alfred-dashboard.service
   tags: [services]
 
-- name: Enable Podman auto-update timer
+- name: Deploy alfred-safe-update script
+  ansible.builtin.copy:
+    src: alfred-safe-update.sh
+    dest: /usr/local/bin/alfred-safe-update
+    mode: "0755"
+  tags: [services]
+
+- name: Deploy alfred-safe-update systemd units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/{{ item }}
+    mode: "0644"
+  loop:
+    - alfred-safe-update.service
+    - alfred-safe-update.timer
+  notify: Reload systemd
+  tags: [services]
+
+- name: Disable default podman auto-update timer
   ansible.builtin.systemd:
     name: podman-auto-update.timer
+    enabled: false
+    state: stopped
+  failed_when: false
+  tags: [services]
+
+- name: Enable alfred-safe-update timer
+  ansible.builtin.systemd:
+    name: alfred-safe-update.timer
     enabled: true
     state: started
+    daemon_reload: true
   tags: [services]
 
 # MCU firmware flash (optional — only when binary is provided)

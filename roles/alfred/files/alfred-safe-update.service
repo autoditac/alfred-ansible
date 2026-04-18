@@ -1,0 +1,11 @@
+[Unit]
+Description=Alfred safe container auto-update
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/alfred-safe-update
+Environment=DASHBOARD_URL=http://localhost:3000/api/status
+Environment=SCHEDULE_FILE=/home/pi/.cassandra/user/schedulecfg.json
+Environment=BUFFER_MIN=30
