@@ -4,12 +4,12 @@ all:
     mowers:
       hosts:
         mower-a:
-          ansible_host: 192.168.x.x
+          ansible_host: batman.local
           ansible_user: pi
           alfred_board: rpi4       # rpi4 | bananapi
           alfred_mcu: main         # main | perimeter
         # mower-b:
-        #   ansible_host: 192.168.x.x
+        #   ansible_host: mower-b.local
         #   ansible_user: pi
         #   alfred_board: rpi4
         #   alfred_mcu: main
