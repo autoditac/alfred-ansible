@@ -10,6 +10,10 @@ alfred_sunray_image: ghcr.io/autoditac/sunray:latest
 alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:latest
 alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
 
+# Image tag and update schedule (overridable per host)
+alfred_sunray_image_tag: latest
+alfred_safe_update_on_calendar: "*-*-* 03:00:00"
+
 # Paths
 alfred_mcu_dir: /home/pi/alfred-mcu
 alfred_quadlet_dir: /etc/containers/systemd

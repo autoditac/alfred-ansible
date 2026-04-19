@@ -1,0 +1,11 @@
+[Unit]
+Description=Alfred safe container auto-update timer
+Requires=alfred-safe-update.service
+
+[Timer]
+OnCalendar={{ alfred_safe_update_on_calendar }}
+RandomizedDelaySec=1800
+Persistent=true
+
+[Install]
+WantedBy=timers.target

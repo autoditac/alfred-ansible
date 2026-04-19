@@ -110,9 +110,16 @@
     dest: "{{ alfred_quadlet_dir }}/{{ item }}"
     mode: "0644"
   loop:
-    - sunray.container
     - cassandra.container
     - alfred-dashboard.container
+  notify: Reload systemd
+  tags: [services]
+
+- name: Deploy templated Sunray Quadlet
+  ansible.builtin.template:
+    src: sunray.container.j2
+    dest: "{{ alfred_quadlet_dir }}/sunray.container"
+    mode: "0644"
   notify: Reload systemd
   tags: [services]
 
@@ -146,12 +153,17 @@
 
 - name: Deploy alfred-safe-update systemd units
   ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: /etc/systemd/system/{{ item }}
+    src: alfred-safe-update.service
+    dest: /etc/systemd/system/alfred-safe-update.service
     mode: "0644"
-  loop:
-    - alfred-safe-update.service
-    - alfred-safe-update.timer
+  notify: Reload systemd
+  tags: [services]
+
+- name: Deploy templated alfred-safe-update timer
+  ansible.builtin.template:
+    src: alfred-safe-update.timer.j2
+    dest: /etc/systemd/system/alfred-safe-update.timer
+    mode: "0644"
   notify: Reload systemd
   tags: [services]
 

@@ -8,6 +8,8 @@ all:
           ansible_user: pi
           alfred_board: rpi4       # rpi4 | bananapi
           alfred_mcu: main         # main | perimeter
+          alfred_sunray_image_tag: alpha
+          alfred_safe_update_on_calendar: hourly
         # mower-b:
         #   ansible_host: mower-b.local
         #   ansible_user: pi
