@@ -111,7 +111,14 @@
     mode: "0644"
   loop:
     - cassandra.container
-    - alfred-dashboard.container
+  notify: Reload systemd
+  tags: [services]
+
+- name: Deploy templated Alfred Dashboard Quadlet
+  ansible.builtin.template:
+    src: alfred-dashboard.container.j2
+    dest: "{{ alfred_quadlet_dir }}/alfred-dashboard.container"
+    mode: "0644"
   notify: Reload systemd
   tags: [services]
 

@@ -10,6 +10,8 @@ all:
           alfred_mcu: main         # main | perimeter
           alfred_sunray_image_tag: alpha
           alfred_safe_update_on_calendar: hourly
+          alfred_dock_lat: 54.89599928
+          alfred_dock_lon: 9.56558693
         # mower-b:
         #   ansible_host: mower-b.local
         #   ansible_user: pi
