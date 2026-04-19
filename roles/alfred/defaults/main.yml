@@ -7,7 +7,7 @@ alfred_packages:
 
 # Podman image references
 alfred_sunray_image: ghcr.io/autoditac/sunray:latest
-alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:latest
+alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:alpha
 alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
 
 # Image tag and update schedule (overridable per host)

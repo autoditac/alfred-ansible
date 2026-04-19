@@ -90,7 +90,7 @@ fi
 log "Pre-pulling images to refresh manifest cache"
 for img in ghcr.io/autoditac/sunray:alpha \
            ghcr.io/autoditac/cassandra:latest \
-           ghcr.io/autoditac/alfred-dashboard:latest; do
+           ghcr.io/autoditac/alfred-dashboard:alpha; do
     podman pull --quiet "$img" 2>&1 | while IFS= read -r line; do log "pull $img: $line"; done \
         || log "WARN — pull $img failed"
 done
