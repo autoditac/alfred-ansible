@@ -82,6 +82,19 @@ else
 fi
 
 # --- 3. Run the update ---
+# Pre-pull images to refresh the local manifest reference. podman auto-update
+# compares the manifest digest of the running container against the registry;
+# GHCR's CDN caches manifests briefly (~1–5 min), which can cause auto-update
+# to see a stale digest and skip a freshly published image. An explicit pull
+# bypasses that cache-miss window.
+log "Pre-pulling images to refresh manifest cache"
+for img in ghcr.io/autoditac/sunray:alpha \
+           ghcr.io/autoditac/cassandra:latest \
+           ghcr.io/autoditac/alfred-dashboard:latest; do
+    podman pull --quiet "$img" 2>&1 | while IFS= read -r line; do log "pull $img: $line"; done \
+        || log "WARN — pull $img failed"
+done
+
 log "Running podman auto-update"
 podman auto-update 2>&1 | while IFS= read -r line; do log "$line"; done
 log "Done"
