@@ -30,6 +30,7 @@ containers, managed by systemd Quadlet units.
 |---|---|
 | `packages` | Install podman, openocd, libgpiod2 |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
+| `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
 | `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |
 | `firmware` | Backup + flash MCU firmware (when `alfred_firmware_bin` is set) |
