@@ -43,7 +43,7 @@ alfred_wifi_band: bg
 # Journald logging
 alfred_journald_config_dir: /etc/systemd/journald.conf.d
 alfred_journald_storage_dir: /var/log/journal
-alfred_journald_storage: auto
+alfred_journald_storage: persistent
 alfred_journald_system_max_use: 500M
 alfred_journald_system_keep_free: 50M
 alfred_journald_system_max_file_size: 100M
