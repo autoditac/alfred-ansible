@@ -1,0 +1,19 @@
+[Unit]
+Description=CaSSAndRA mower management
+After=network-online.target sunray.service
+Wants=network-online.target
+
+[Container]
+Image={{ alfred_cassandra_image }}:{{ alfred_cassandra_image_tag }}
+ContainerName=cassandra
+Network=host
+Volume=/home/pi/.cassandra:/data:Z
+AutoUpdate=registry
+PodmanArgs=--init
+
+[Service]
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target default.target

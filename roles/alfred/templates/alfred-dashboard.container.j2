@@ -4,7 +4,7 @@ After=network-online.target sunray.service
 Wants=network-online.target
 
 [Container]
-Image=ghcr.io/autoditac/alfred-dashboard:{{ alfred_dashboard_image_tag }}
+Image={{ alfred_dashboard_image }}:{{ alfred_dashboard_image_tag }}
 ContainerName=alfred-dashboard
 Network=host
 Environment=SUNRAY_HOST=127.0.0.1

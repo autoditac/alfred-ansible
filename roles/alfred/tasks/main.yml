@@ -140,13 +140,11 @@
     - save-firmware.ocd.j2
   tags: [openocd]
 
-- name: Deploy Quadlet container files
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: "{{ alfred_quadlet_dir }}/{{ item }}"
+- name: Deploy templated CaSSAndRA Quadlet
+  ansible.builtin.template:
+    src: cassandra.container.j2
+    dest: "{{ alfred_quadlet_dir }}/cassandra.container"
     mode: "0644"
-  loop:
-    - cassandra.container
   notify: Reload systemd
   tags: [services]
 

@@ -13,7 +13,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=ghcr.io/autoditac/sunray:{{ alfred_sunray_image_tag }}
+Image={{ alfred_sunray_image }}:{{ alfred_sunray_image_tag }}
 ContainerName=sunray
 Network=host
 SecurityLabelDisable=true
