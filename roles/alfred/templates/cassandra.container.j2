@@ -7,7 +7,7 @@ Wants=network-online.target
 Image={{ alfred_cassandra_image }}:{{ alfred_cassandra_image_tag }}
 ContainerName=cassandra
 Network=host
-Volume=/home/pi/.cassandra:/data:Z
+Volume=/home/{{ ansible_user }}/.cassandra:/data:Z
 AutoUpdate=registry
 PodmanArgs=--init
 
