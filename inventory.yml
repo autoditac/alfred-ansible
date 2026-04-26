@@ -18,14 +18,15 @@ all:
           alfred_enable_security_updates: true
           alfred_dock_lat: 54.89599928
           alfred_dock_lon: 9.56558693
-        # robin:
-        #   ansible_host: robin.local
-        #   ansible_user: rouven
-        #   alfred_board: rpi4
-        #   alfred_mcu: main
-        #   alfred_sunray_image_tag: latest
-        #   alfred_dashboard_image_tag: latest
-        #   alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
-        #   alfred_enable_security_updates: true
-        #   alfred_dock_lat: 54.89599928
-        #   alfred_dock_lon: 9.56558693
+        robin:
+          ansible_host: robin.local
+          ansible_user: rouven
+          alfred_board: rpi4
+          alfred_mcu: main
+          alfred_sunray_image_tag: beta
+          alfred_dashboard_image_tag: beta
+          alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
+          alfred_enable_security_updates: true
+          alfred_wifi_connection: flottelotte
+          alfred_dock_lat: 54.89599928
+          alfred_dock_lon: 9.56558693
