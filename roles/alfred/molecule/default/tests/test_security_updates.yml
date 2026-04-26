@@ -1,9 +1,5 @@
-- name: Skip security update checks in test mode
-  ansible.builtin.debug:
-    msg: "Skipping security update checks in test mode"
-  when: test_mode | default(false)
-
 - name: Verify batman inventory inputs and rendered APT config
+  when: not (test_mode | default(false))
   block:
     - name: Assert batman inventory host overrides
       ansible.builtin.assert:

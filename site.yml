@@ -8,6 +8,8 @@
 # Tags:
 #   packages  - Install system packages
 #   security  - Enable unattended security updates and the nightly reboot window on opted-in hosts
+#   logging   - Persistent journald storage; remove RPi volatile override
+#   tuning    - CPU governor, sysctl, WiFi, boot config
 #   openocd   - Deploy OpenOCD SWD configs
 #   services  - Deploy Podman Quadlet service files
 #   firmware  - Flash MCU firmware (requires pre-built .bin)
