@@ -1,0 +1,9 @@
+---
+- name: Verify
+  hosts: all
+  connection: local
+  become: false
+  gather_facts: false
+
+  tasks:
+    - import_tasks: tests/test_security_updates.yml

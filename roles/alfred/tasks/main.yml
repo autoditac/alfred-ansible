@@ -6,6 +6,44 @@
     update_cache: true
   tags: [packages]
 
+
+# --- Security updates ---
+
+- name: Install unattended-upgrades package
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+    update_cache: true
+  when: alfred_enable_security_updates | bool
+  tags: [packages, security]
+
+- name: Ensure APT daily timers are enabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - apt-daily.timer
+    - apt-daily-upgrade.timer
+  when: alfred_enable_security_updates | bool
+  tags: [packages, security]
+
+- name: Deploy APT periodic auto-upgrades config
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: "0644"
+  when: alfred_enable_security_updates | bool
+  tags: [packages, security]
+
+- name: Deploy unattended-upgrades reboot window config
+  ansible.builtin.template:
+    src: 52alfred-unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/52alfred-unattended-upgrades
+    mode: "0644"
+  when: alfred_enable_security_updates | bool
+  tags: [packages, security]
+
 # --- OS tuning ---
 
 - name: Deploy CPU performance governor service

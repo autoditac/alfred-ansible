@@ -7,6 +7,7 @@
 #
 # Tags:
 #   packages  - Install system packages
+#   security  - Enable unattended security updates and the nightly reboot window on opted-in hosts
 #   openocd   - Deploy OpenOCD SWD configs
 #   services  - Deploy Podman Quadlet service files
 #   firmware  - Flash MCU firmware (requires pre-built .bin)

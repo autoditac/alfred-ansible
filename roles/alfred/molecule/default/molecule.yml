@@ -1,0 +1,22 @@
+driver:
+  name: delegated
+
+platforms:
+  - name: batman
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      batman:
+        ansible_connection: local
+        ansible_become: false
+        alfred_enable_security_updates: true
+        alfred_packages:
+          - podman
+          - openocd
+          - libgpiod3
+        alfred_unattended_upgrades_reboot_time: "03:00"
+
+verifier:
+  name: ansible
