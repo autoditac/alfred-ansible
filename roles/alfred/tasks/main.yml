@@ -70,9 +70,10 @@
   notify: Reload sysctl
   tags: [tuning]
 
+
 - name: Create journald config directory
   ansible.builtin.file:
-    path: /etc/systemd/journald.conf.d
+    path: "{{ alfred_journald_config_dir }}"
     state: directory
     owner: root
     group: root
@@ -82,7 +83,7 @@
 
 - name: Create persistent journal storage directory
   ansible.builtin.file:
-    path: /var/log/journal
+    path: "{{ alfred_journald_storage_dir }}"
     state: directory
     owner: root
     group: systemd-journal
@@ -99,6 +100,12 @@
       SystemKeepFree=50M
       SystemMaxFileSize=100M
     dest: /etc/systemd/journald.conf.d/10-persistent.conf
+  tags: [tuning, logging]
+
+- name: Deploy persistent journald configuration
+  ansible.builtin.template:
+    src: journald.conf.j2
+    dest: "{{ alfred_journald_config_dir }}/10-persistent.conf"
     owner: root
     group: root
     mode: "0644"
