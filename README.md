@@ -7,7 +7,29 @@ containers, managed by systemd Quadlet units.
 
 - BananaPi on the Alfred replaced with Raspberry Pi 4B with 4 GB RAM
 - Debian Trixie (13) — Raspberry Pi OS Lite (64-bit) installed on the RPi4b
-- SSH access with sudo privileges
+- SSH access with passwordless sudo for the `ansible_user`
+
+## System preparation
+
+Before running the playbook, the `ansible_user` must exist on the target host
+and have passwordless sudo access. Run these commands once on the mower (as
+root or via the initial `pi` user):
+
+```bash
+# Create the user (skip if it already exists)
+useradd -m -s /bin/bash <username>
+passwd <username>
+
+# Grant passwordless sudo
+echo "<username> ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/<username>
+chmod 0440 /etc/sudoers.d/<username>
+```
+
+After that, copy your SSH public key so Ansible can connect without a password:
+
+```bash
+ssh-copy-id <username>@<mower>.local
+```
 
 ## Differences from stock Ardumower/Sunray setup
 
@@ -29,6 +51,7 @@ containers, managed by systemd Quadlet units.
 | Tag | Action |
 |---|---|
 | `packages` | Install podman, openocd, libgpiod2 |
+| `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
 | `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |

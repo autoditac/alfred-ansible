@@ -32,7 +32,6 @@
   notify: Reload sysctl
   tags: [tuning]
 
-
 - name: Create journald config directory
   ansible.builtin.file:
     path: /etc/systemd/journald.conf.d
@@ -40,8 +39,8 @@
     owner: root
     group: root
     mode: "0755"
+  when: alfred_sunray_image_tag in ['alpha', 'beta']
   tags: [tuning, logging]
-
 
 - name: Create persistent journal storage directory
   ansible.builtin.file:
@@ -50,8 +49,8 @@
     owner: root
     group: systemd-journal
     mode: "2755"
+  when: alfred_sunray_image_tag in ['alpha', 'beta']
   tags: [tuning, logging]
-
 
 - name: Configure persistent journald logging
   ansible.builtin.copy:
@@ -66,6 +65,7 @@
     group: root
     mode: "0644"
   notify: Restart systemd-journald
+  when: alfred_sunray_image_tag in ['alpha', 'beta']
   tags: [tuning, logging]
 
 - name: Ensure boot config lines are present
