@@ -5,13 +5,19 @@ alfred_packages:
   - openocd
   - libgpiod2
 
-# Podman image references
-alfred_sunray_image: ghcr.io/autoditac/sunray:latest
-alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:alpha
-alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
+# Security updates
+alfred_enable_security_updates: false
+alfred_unattended_upgrades_reboot_time: "03:00"
 
-# Image tag and update schedule (overridable per host)
+# Podman image references (base registry paths; tag is set via alfred_*_image_tag below)
+alfred_sunray_image: ghcr.io/autoditac/sunray
+alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard
+alfred_cassandra_image: ghcr.io/autoditac/cassandra
+
+# Release stream tags (overridable per host in inventory)
+# Streams: latest (production default) | beta (batman test stream)
 alfred_sunray_image_tag: latest
+alfred_dashboard_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
 
 # Paths
@@ -39,6 +45,16 @@ alfred_swd_gpio:
 alfred_vm_swappiness: 10
 alfred_wifi_regdomain: DK
 alfred_wifi_band: bg
+
+# Journald logging
+alfred_journald_config_dir: /etc/systemd/journald.conf.d
+alfred_journald_storage_dir: /var/log/journal
+alfred_journald_storage: persistent
+alfred_journald_system_max_use: 500M
+alfred_journald_system_keep_free: 50M
+alfred_journald_system_max_file_size: 100M
+alfred_journald_rpi_volatile_override: /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
+
 alfred_boot_config_lines:
   - usb_max_current_enable=1
   - dtparam=uart0=on
