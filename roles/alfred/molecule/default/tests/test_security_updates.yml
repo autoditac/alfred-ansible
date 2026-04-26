@@ -1,0 +1,40 @@
+- name: Verify batman inventory inputs and rendered APT config
+  when: not (test_mode | default(false))
+  block:
+    - name: Assert batman inventory host overrides
+      ansible.builtin.assert:
+        that:
+          - hostvars["batman"].alfred_enable_security_updates | bool
+          - "'libgpiod3' in hostvars['batman'].alfred_packages"
+          - hostvars["batman"].alfred_unattended_upgrades_reboot_time == "03:00"
+
+    - name: Stat rendered security update config files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /tmp/alfred-ansible-molecule-default/20auto-upgrades
+        - /tmp/alfred-ansible-molecule-default/52alfred-unattended-upgrades
+      register: security_update_stats
+
+    - name: Assert rendered security update config files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+      loop: "{{ security_update_stats.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Read rendered security update config files
+      ansible.builtin.slurp:
+        path: "{{ item.item }}"
+      loop: "{{ security_update_stats.results }}"
+      register: security_update_contents
+
+    - name: Assert rendered APT directives
+      ansible.builtin.assert:
+        that:
+          - (security_update_contents.results[0].content | b64decode) is search("APT::Periodic::Update-Package-Lists")
+          - (security_update_contents.results[0].content | b64decode) is search("APT::Periodic::Unattended-Upgrade")
+          - (security_update_contents.results[1].content | b64decode) is search("Unattended-Upgrade::Automatic-Reboot")
+          - (security_update_contents.results[1].content | b64decode) is search("Unattended-Upgrade::Automatic-Reboot-Time")

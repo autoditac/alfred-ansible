@@ -1,0 +1,24 @@
+---
+- name: Converge
+  hosts: all
+  connection: local
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Create a temporary render directory
+      ansible.builtin.file:
+        path: /tmp/alfred-ansible-molecule-default
+        state: directory
+        mode: "0755"
+
+    - name: Render the security update templates
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../templates/{{ item.src }}"
+        dest: "/tmp/alfred-ansible-molecule-default/{{ item.dest }}"
+        mode: "0644"
+      loop:
+        - src: 20auto-upgrades.j2
+          dest: 20auto-upgrades
+        - src: 52alfred-unattended-upgrades.j2
+          dest: 52alfred-unattended-upgrades

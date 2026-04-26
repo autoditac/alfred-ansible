@@ -51,6 +51,7 @@ ssh-copy-id <username>@<mower>.local
 | Tag | Action |
 |---|---|
 | `packages` | Install podman, openocd, libgpiod2 |
+| `security` | Enable unattended security updates and a 03:00 reboot window on opted-in hosts |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
@@ -63,6 +64,7 @@ ssh-copy-id <username>@<mower>.local
 ```yaml
 alfred_board: rpi4        # rpi4 | bananapi
 alfred_mcu: main          # main | perimeter (selects SRST pin)
+alfred_enable_security_updates: true
 ```
 
 ## Usage
