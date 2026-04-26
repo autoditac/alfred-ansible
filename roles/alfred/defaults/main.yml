@@ -5,13 +5,20 @@ alfred_packages:
   - openocd
   - libgpiod2
 
-# Podman image references
-alfred_sunray_image: ghcr.io/autoditac/sunray:latest
-alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard:alpha
-alfred_cassandra_image: ghcr.io/autoditac/cassandra:latest
+# Security updates
+alfred_enable_security_updates: false
+alfred_unattended_upgrades_reboot_time: "03:00"
 
-# Image tag and update schedule (overridable per host)
+# Podman image references (base registry paths; tag is set via alfred_*_image_tag below)
+alfred_sunray_image: ghcr.io/autoditac/sunray
+alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard
+alfred_cassandra_image: ghcr.io/autoditac/cassandra
+
+# Release stream tags (overridable per host in inventory)
+# Streams: latest (production default) | beta (batman test stream)
 alfred_sunray_image_tag: latest
+alfred_dashboard_image_tag: latest
+alfred_cassandra_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
 
 # Paths

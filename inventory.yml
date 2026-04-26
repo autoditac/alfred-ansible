@@ -3,17 +3,29 @@ all:
   children:
     mowers:
       hosts:
-        mower-a:
+        batman:
           ansible_host: batman.local
           ansible_user: pi
           alfred_board: rpi4       # rpi4 | bananapi
           alfred_mcu: main         # main | perimeter
-          alfred_sunray_image_tag: alpha
+          alfred_packages:
+            - podman
+            - openocd
+            - libgpiod3
+          alfred_sunray_image_tag: beta
+          alfred_dashboard_image_tag: beta
           alfred_safe_update_on_calendar: hourly
+          alfred_enable_security_updates: true
           alfred_dock_lat: 54.89599928
           alfred_dock_lon: 9.56558693
-        # mower-b:
-        #   ansible_host: mower-b.local
-        #   ansible_user: pi
+        # robin:
+        #   ansible_host: robin.local
+        #   ansible_user: rouven
         #   alfred_board: rpi4
         #   alfred_mcu: main
+        #   alfred_sunray_image_tag: latest
+        #   alfred_dashboard_image_tag: latest
+        #   alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
+        #   alfred_enable_security_updates: true
+        #   alfred_dock_lat: 54.89599928
+        #   alfred_dock_lon: 9.56558693
