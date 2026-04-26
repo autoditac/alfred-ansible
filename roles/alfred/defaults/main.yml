@@ -39,6 +39,16 @@ alfred_swd_gpio:
 alfred_vm_swappiness: 10
 alfred_wifi_regdomain: DK
 alfred_wifi_band: bg
+
+# Journald logging
+alfred_journald_config_dir: /etc/systemd/journald.conf.d
+alfred_journald_storage_dir: /var/log/journal
+alfred_journald_storage: persistent
+alfred_journald_system_max_use: 500M
+alfred_journald_system_keep_free: 50M
+alfred_journald_system_max_file_size: 100M
+alfred_journald_rpi_volatile_override: /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
+
 alfred_boot_config_lines:
   - usb_max_current_enable=1
   - dtparam=uart0=on

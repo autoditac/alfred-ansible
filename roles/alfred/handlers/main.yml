@@ -11,3 +11,8 @@
   ansible.builtin.systemd:
     name: NetworkManager.service
     state: restarted
+
+- name: Restart systemd-journald
+  ansible.builtin.systemd:
+    name: systemd-journald.service
+    state: restarted
