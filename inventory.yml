@@ -13,7 +13,7 @@ all:
             - openocd
             - libgpiod3
           alfred_sunray_image_tag: beta
-          alfred_dashboard_image_tag: beta
+          alfred_dashboard_image_tag: alpha  # beta CI not yet available (PR #6 pending)
           alfred_safe_update_on_calendar: hourly
           alfred_enable_security_updates: true
           alfred_dock_lat: 54.89599928
