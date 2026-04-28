@@ -8,6 +8,7 @@ Image=ghcr.io/autoditac/cassandra:latest
 ContainerName=cassandra
 Network=host
 Volume=/home/pi/.cassandra:/data:Z
+Environment=TZ=Europe/Copenhagen
 AutoUpdate=registry
 PodmanArgs=--init
 
