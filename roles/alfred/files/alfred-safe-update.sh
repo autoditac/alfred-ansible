@@ -115,10 +115,9 @@ for img in "${images_to_pull[@]}"; do
         || log "WARN — pull $img failed"
 done
 
-log "Running podman auto-update"
-podman auto-update 2>&1 | while IFS= read -r line; do log "$line"; done
-
-# Restart services to apply any config changes from reloaded unit files
+# Restart services to apply any config changes from reloaded unit files.
+# This must happen BEFORE auto-update so that auto-update sees the new image
+# specs (from the reloaded unit files) rather than the old running images.
 log "Restarting services to apply updated container configurations"
 for unit_file in /etc/containers/systemd/*.container; do
     service_name="$(basename "$unit_file" .container).service"
@@ -128,5 +127,8 @@ for unit_file in /etc/containers/systemd/*.container; do
             || log "WARN — restart $service_name failed"
     fi
 done
+
+log "Running podman auto-update"
+podman auto-update 2>&1 | while IFS= read -r line; do log "$line"; done
 
 log "Done"
