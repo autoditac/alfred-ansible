@@ -81,20 +81,52 @@ else
     log "No schedule file found, proceeding"
 fi
 
-# --- 3. Run the update ---
+# --- 3. Reload container unit files and run the update ---
+# Container unit files may have been updated by ansible (e.g., image tag changed).
+# Reload systemd to pick up any changes in /etc/containers/systemd/*.container.
+log "Reloading systemd daemon to pick up container unit changes"
+systemctl daemon-reload 2>&1 | while IFS= read -r line; do log "daemon-reload: $line"; done
+
+# Extract image references from container unit files to determine which images to pull.
+# This ensures we pull the correct stream (alpha, beta, latest) as configured, not hardcoded.
+log "Extracting image references from container unit files"
+declare -a images_to_pull
+for unit_file in /etc/containers/systemd/*.container; do
+    if [[ -f "$unit_file" ]]; then
+        # Extract lines like "Image=ghcr.io/autoditac/sunray:beta"
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^Image= ]]; then
+                img="${line#Image=}"
+                images_to_pull+=("$img")
+                log "Found image in $(basename "$unit_file"): $img"
+            fi
+        done < "$unit_file"
+    fi
+done
+
 # Pre-pull images to refresh the local manifest reference. podman auto-update
 # compares the manifest digest of the running container against the registry;
 # GHCR's CDN caches manifests briefly (~1–5 min), which can cause auto-update
 # to see a stale digest and skip a freshly published image. An explicit pull
 # bypasses that cache-miss window.
 log "Pre-pulling images to refresh manifest cache"
-for img in ghcr.io/autoditac/sunray:alpha \
-           ghcr.io/autoditac/cassandra:latest \
-           ghcr.io/autoditac/alfred-dashboard:alpha; do
+for img in "${images_to_pull[@]}"; do
     podman pull --quiet "$img" 2>&1 | while IFS= read -r line; do log "pull $img: $line"; done \
         || log "WARN — pull $img failed"
 done
 
 log "Running podman auto-update"
 podman auto-update 2>&1 | while IFS= read -r line; do log "$line"; done
+
+# Restart services to apply any config changes from reloaded unit files
+log "Restarting services to apply updated container configurations"
+for unit_file in /etc/containers/systemd/*.container; do
+    service_name="$(basename "$unit_file" .container).service"
+    if systemctl is-active --quiet "$service_name" 2>/dev/null; then
+        log "Restarting $service_name"
+        systemctl restart "$service_name" 2>&1 | while IFS= read -r line; do log "restart $service_name: $line"; done \
+            || log "WARN — restart $service_name failed"
+    fi
+done
+
 log "Done"
