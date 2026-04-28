@@ -119,7 +119,13 @@
 
 - name: Set WiFi band preference
   ansible.builtin.command:
-    cmd: nmcli con modify {{ alfred_wifi_connection }} 802-11-wireless.band {{ alfred_wifi_band }}
+    argv:
+      - nmcli
+      - con
+      - modify
+      - "{{ alfred_wifi_connection }}"
+      - 802-11-wireless.band
+      - "{{ alfred_wifi_band }}"
   changed_when: true
   notify: Restart NetworkManager
   tags: [tuning]
@@ -223,7 +229,17 @@
     - sunray.service
     - cassandra.service
     - alfred-dashboard.service
-  ignore_errors: true
+  register: alfred_service_start_results
+  failed_when: false
+  tags: [services]
+
+- name: Fail on unexpected service start errors
+  ansible.builtin.fail:
+    msg: "Failed to start {{ item.item }}: {{ item.msg | default('unknown error') }}"
+  loop: "{{ alfred_service_start_results.results | default([]) }}"
+  when:
+    - item.failed | default(false)
+    - item.msg is not search('(?i)(no such image|manifest unknown|pull access denied|image.*not found|Unit.*not found)')
   tags: [services]
 
 - name: Deploy alfred-safe-update script
