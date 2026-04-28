@@ -3,7 +3,7 @@
 alfred_packages:
   - podman
   - openocd
-  - libgpiod2
+  - libgpiod3
 
 # Security updates
 alfred_enable_security_updates: false
@@ -22,7 +22,7 @@ alfred_cassandra_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
 
 # Paths
-alfred_mcu_dir: /home/pi/alfred-mcu
+alfred_mcu_dir: /home/{{ ansible_user }}/alfred-mcu
 alfred_quadlet_dir: /etc/containers/systemd
 
 # SWD GPIO mapping per board type
@@ -46,6 +46,7 @@ alfred_swd_gpio:
 alfred_vm_swappiness: 10
 alfred_wifi_regdomain: DK
 alfred_wifi_band: bg
+alfred_wifi_connection: preconfigured
 
 # Journald logging
 alfred_journald_config_dir: /etc/systemd/journald.conf.d
