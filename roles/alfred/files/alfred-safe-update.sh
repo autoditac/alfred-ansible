@@ -9,22 +9,43 @@ BUFFER_MIN="${BUFFER_MIN:-30}"
 
 log() { echo "$(date '+%F %T') alfred-safe-update: $*"; }
 
-# --- 1. Check mower state via dashboard API ---
-status_json=$(curl -sf --max-time 5 "$DASHBOARD_URL" 2>/dev/null) || {
-    log "SKIP — dashboard unreachable (mower may be off)"
-    exit 0
+# Fetch current mower state and decide whether it's safe to proceed with
+# service restarts / auto-update. Returns 0 if safe, 1 if unsafe (mower is
+# MOW=1 or DOCK=4). On fetch/parse failure, logs a warning and returns 0
+# (treat as safe) so an in-progress update can complete cleanly.
+# 0=IDLE, 1=MOW, 2=CHARGE, 3=ERROR, 4=DOCK
+mower_is_safe() {
+    local status_json operation op_name
+    status_json=$(curl -sf --max-time 5 "$DASHBOARD_URL" 2>/dev/null) || {
+        log "WARN — dashboard unreachable during recheck, treating as safe"
+        return 0
+    }
+
+    operation=$(echo "$status_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('operation', -1))" 2>/dev/null) || operation=-1
+    op_name=$(echo "$status_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('operationName', 'UNKNOWN'))" 2>/dev/null) || op_name="UNKNOWN"
+
+    if [[ "$operation" == "1" || "$operation" == "4" ]]; then
+        log "Mower state UNSAFE: $op_name (op=$operation)"
+        return 1
+    fi
+
+    log "Mower state OK: $op_name (op=$operation)"
+    return 0
 }
 
-operation=$(echo "$status_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('operation', -1))" 2>/dev/null) || operation=-1
-op_name=$(echo "$status_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('operationName', 'UNKNOWN'))" 2>/dev/null) || op_name="UNKNOWN"
-
-# 0=IDLE, 1=MOW, 2=CHARGE, 3=ERROR, 4=DOCK
-if [[ "$operation" == "1" || "$operation" == "4" ]]; then
-    log "SKIP — mower is $op_name (op=$operation)"
+# --- 1. Check mower state via dashboard API ---
+# Initial reachability probe — if the dashboard is unreachable here, the mower
+# is likely off, so skip the update entirely. This is intentionally separate
+# from mower_is_safe() which treats unreachable-during-recheck as safe.
+if ! curl -sf --max-time 5 "$DASHBOARD_URL" >/dev/null 2>&1; then
+    log "SKIP — dashboard unreachable (mower may be off)"
     exit 0
 fi
 
-log "Mower state OK: $op_name (op=$operation)"
+if ! mower_is_safe; then
+    log "SKIP — mower is busy"
+    exit 0
+fi
 
 # --- 2. Check CaSSAndRA schedule ---
 if [[ -f "$SCHEDULE_FILE" ]]; then
@@ -118,15 +139,29 @@ done
 # Restart services to apply any config changes from reloaded unit files.
 # This must happen BEFORE auto-update so that auto-update sees the new image
 # specs (from the reloaded unit files) rather than the old running images.
+# Recheck mower state immediately before each restart to guard against the
+# mower transitioning into MOW between the initial check and now (e.g.,
+# DOCK_AUTO_START firing during charging completion).
 log "Restarting services to apply updated container configurations"
+aborted=0
 for unit_file in /etc/containers/systemd/*.container; do
     service_name="$(basename "$unit_file" .container).service"
     if systemctl is-active --quiet "$service_name" 2>/dev/null; then
+        if ! mower_is_safe; then
+            log "ABORT — mower started mowing during update; skipping restart of $service_name and remaining restarts"
+            aborted=1
+            break
+        fi
         log "Restarting $service_name"
         systemctl restart "$service_name" 2>&1 | while IFS= read -r line; do log "restart $service_name: $line"; done \
             || log "WARN — restart $service_name failed"
     fi
 done
+
+if [[ "$aborted" -eq 1 ]]; then
+    log "Done (aborted — skipped podman auto-update)"
+    exit 0
+fi
 
 log "Running podman auto-update"
 podman auto-update 2>&1 | while IFS= read -r line; do log "$line"; done
