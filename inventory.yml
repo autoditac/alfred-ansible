@@ -12,7 +12,7 @@ all:
             - podman
             - openocd
             - libgpiod3
-          alfred_sunray_image_tag: beta
+          alfred_sunray_image_tag: alpha # tracking feature/min-wheel-clamp-during-dock for dock-approach clamp test
           alfred_dashboard_image_tag: alpha  # beta CI not yet available (PR #6 pending)
           alfred_safe_update_on_calendar: hourly
           alfred_enable_security_updates: true
