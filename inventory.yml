@@ -24,7 +24,7 @@ all:
           alfred_board: rpi4
           alfred_mcu: main
           alfred_sunray_image_tag: beta
-          alfred_dashboard_image_tag: beta
+          alfred_dashboard_image_tag: latest  # fallback until :beta image is available
           alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
           alfred_enable_security_updates: true
           alfred_wifi_connection: flottelotte

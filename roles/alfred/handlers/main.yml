@@ -16,3 +16,8 @@
   ansible.builtin.systemd:
     name: systemd-journald.service
     state: restarted
+
+- name: Restart cassandra
+  ansible.builtin.systemd:
+    name: cassandra.service
+    state: restarted
