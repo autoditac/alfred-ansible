@@ -68,3 +68,19 @@ alfred_boot_config_lines:
 
 # MCU firmware binary (set via --extra-vars or leave empty to skip flash)
 alfred_firmware_bin: ""
+
+# u-blox F9P GPS receiver
+# Sunray GPS_CONFIG writes UART2 baudrate only to the RAM layer; on F9P reset
+# the receiver falls back to the FLASH default (38400) and stops decoding RTCM3.
+# This role persists the desired baudrate to RAM | BBR | FLASH (layers byte 0x07).
+alfred_f9p_device: /dev/ttyACM0
+alfred_f9p_uart2_baudrate: 115200
+alfred_f9p_state_dir: /var/lib/alfred
+
+# CaSSAndRA defaults (fix stock template values)
+# Stock CaSSAndRA ships with HTTP IP=http://192.168.1.1 and PASSWORD=null,
+# which does not match the Sunray container running on the same host. We fix
+# only when those exact stock values are still present (UI changes preserved).
+alfred_sunray_http_ip: "http://127.0.0.1"
+alfred_sunray_http_password: "123456"   # matches default PASS in sunray/config.h
+alfred_cassandra_rover_picture: "alfred/"  # UI avatar / robot image directory name
