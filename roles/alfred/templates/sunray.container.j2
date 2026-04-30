@@ -20,7 +20,7 @@ SecurityLabelDisable=true
 PodmanArgs=--privileged
 Volume=sunray-data:/opt/sunray/data
 Volume=/dev/serial:/dev/serial:ro
-Environment=TZ=Europe/Copenhagen
+Environment=TZ={{ alfred_timezone }}
 AutoUpdate=registry
 
 [Service]

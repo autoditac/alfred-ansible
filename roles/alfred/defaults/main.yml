@@ -21,6 +21,10 @@ alfred_dashboard_image_tag: latest
 alfred_cassandra_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
 
+# Timezone applied to all alfred containers (cassandra, sunray, alfred-dashboard).
+# Override per host in inventory if needed.
+alfred_timezone: Europe/Copenhagen
+
 # Paths
 alfred_mcu_dir: /home/{{ ansible_user }}/alfred-mcu
 alfred_quadlet_dir: /etc/containers/systemd
