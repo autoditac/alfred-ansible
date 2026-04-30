@@ -10,6 +10,7 @@ Network=host
 Volume=/home/{{ ansible_user }}/.cassandra:/data:Z
 AutoUpdate=registry
 PodmanArgs=--init
+Environment=TZ={{ alfred_timezone }}
 
 [Service]
 Restart=on-failure
