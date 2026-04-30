@@ -14,7 +14,7 @@ all:
             - libgpiod3
           alfred_sunray_image_tag: alpha # tracking feature/min-wheel-clamp-during-dock for dock-approach clamp test
           alfred_dashboard_image_tag: alpha  # beta CI not yet available (PR #6 pending)
-          alfred_safe_update_on_calendar: hourly
+          alfred_safe_update_on_calendar: "*-*-* 03:00:00"
           alfred_enable_security_updates: true
           alfred_dock_lat: 54.89599928
           alfred_dock_lon: 9.56558693
