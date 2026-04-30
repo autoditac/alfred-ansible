@@ -355,16 +355,41 @@
   tags: [gps]
 
 - name: Persist F9P UART2 baudrate to RAM | BBR | FLASH
-  ansible.builtin.shell:
-    cmd: |
-      set -eu
-      systemctl stop sunray
-      sleep 2
-      ubxtool -f {{ alfred_f9p_device }} -s {{ alfred_f9p_uart2_baudrate }} \
-        -w 1 -z CFG-UART2-BAUDRATE,{{ alfred_f9p_uart2_baudrate }},7
-      systemctl start sunray
-    creates: "{{ alfred_f9p_state_dir }}/f9p-uart2-baud-{{ alfred_f9p_uart2_baudrate }}.stamp"
-  register: alfred_f9p_uart2_baudrate_set
+  # Wrap in block/always so sunray is always restarted, even if ubxtool fails
+  # or is missing - we never want to leave the rover with sunray stopped.
+  block:
+    - name: Stop sunray before configuring F9P UART2 baudrate
+      ansible.builtin.systemd:
+        name: sunray.service
+        state: stopped
+      register: alfred_f9p_sunray_stop
+      changed_when: false
+
+    - name: Wait for sunray to release the F9P device
+      ansible.builtin.pause:
+        seconds: 2
+      when: alfred_f9p_sunray_stop is succeeded
+
+    - name: Write F9P UART2 baudrate to RAM | BBR | FLASH
+      ansible.builtin.command:
+        argv:
+          - ubxtool
+          - -f
+          - "{{ alfred_f9p_device }}"
+          - -s
+          - "{{ alfred_f9p_uart2_baudrate }}"
+          - -w
+          - "1"
+          - -z
+          - "CFG-UART2-BAUDRATE,{{ alfred_f9p_uart2_baudrate }},7"
+        creates: "{{ alfred_f9p_state_dir }}/f9p-uart2-baud-{{ alfred_f9p_uart2_baudrate }}.stamp"
+      register: alfred_f9p_uart2_baudrate_set
+  always:
+    - name: Ensure sunray is started after configuring F9P UART2 baudrate
+      ansible.builtin.systemd:
+        name: sunray.service
+        state: started
+      changed_when: false
   tags: [gps]
 
 - name: Mark F9P UART2 baudrate as persisted
@@ -402,15 +427,16 @@
 
 - name: Apply Sunray HTTP defaults to CaSSAndRA commcfg.json (idempotent)
   ansible.builtin.command:
-    cmd: >-
-      /usr/local/bin/cassandra-json-fix
-      /home/{{ ansible_user }}/.cassandra/user/commcfg.json
-      http://192.168.1.1
-      IP={{ alfred_sunray_http_ip }}
-      PASSWORD={{ alfred_sunray_http_password }}
+    argv:
+      - /usr/local/bin/cassandra-json-fix
+      - "/home/{{ ansible_user }}/.cassandra/user/commcfg.json"
+      - "http://192.168.1.1"
+      - "IP={{ alfred_sunray_http_ip }}"
+      - "PASSWORD={{ alfred_sunray_http_password }}"
   register: alfred_cassandra_fix
   changed_when: alfred_cassandra_fix.stdout | trim == "changed"
   when: alfred_cassandra_commcfg.stat.exists | default(false)
+  no_log: true  # alfred_sunray_http_password is sensitive
   notify: Restart cassandra
   tags: [services, cassandra]
 
@@ -422,11 +448,11 @@
 
 - name: Set rover_picture to alfred in CaSSAndRA appcfg.json (idempotent)
   ansible.builtin.command:
-    cmd: >-
-      /usr/local/bin/cassandra-json-fix
-      /home/{{ ansible_user }}/.cassandra/user/appcfg.json
-      ardumower/
-      rover_picture={{ alfred_cassandra_rover_picture }}
+    argv:
+      - /usr/local/bin/cassandra-json-fix
+      - "/home/{{ ansible_user }}/.cassandra/user/appcfg.json"
+      - "ardumower/"
+      - "rover_picture={{ alfred_cassandra_rover_picture }}"
   register: alfred_cassandra_appcfg_fix
   changed_when: alfred_cassandra_appcfg_fix.stdout | trim == "changed"
   when: alfred_cassandra_appcfg.stat.exists | default(false)
