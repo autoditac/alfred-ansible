@@ -57,7 +57,6 @@ ssh-copy-id <username>@<mower>.local
 | `gps` | Install ubxtool, mask gpsd, persist the u-blox F9P receiver profile (requires HPG 1.51 firmware) |
 | `f9p-preflight` | Explicit u-blox F9P firmware preflight: deploy tools, verify image, probe receiver |
 | `f9p-flash` | Explicit u-blox F9P firmware updater; dry-run by default and never part of normal deploys |
-| `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
 | `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |
 | `firmware` | Backup + flash STM32 MCU firmware (when `alfred_firmware_bin` is set); does not flash u-blox GNSS firmware |
