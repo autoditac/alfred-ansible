@@ -10,8 +10,11 @@ Network=host
 Environment=SUNRAY_HOST=127.0.0.1
 Environment=SUNRAY_PORT=80
 Environment=PORT=3000
+Environment=GNSS_DEVICE=/dev/ttyACM0
+Environment=GNSS_POLL_MS=3600000
 Environment=TZ=Europe/Copenhagen
 AutoUpdate=registry
+AddDevice=/dev/ttyACM0
 PodmanArgs=--init
 
 [Service]
