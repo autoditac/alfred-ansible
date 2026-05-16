@@ -226,10 +226,10 @@
     mode: "0600"
     content: |
       {% if alfred_cassandra_api_mqtt_username | default('') | string | length > 0 %}
-      CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username | string | to_json }}
+      CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username | string }}
       {% endif %}
       {% if alfred_cassandra_api_mqtt_password | default('') | string | length > 0 %}
-      CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password | string | to_json }}
+      CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password | string }}
       {% endif %}
   when: alfred_cassandra_api | default('') | string == 'MQTT'
   no_log: true  # MQTT credentials are sensitive
@@ -436,7 +436,7 @@
     that:
       - (alfred_cassandra_api | default('') | string) in ['', 'MQTT']
       - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_server | default('') | string | trim | length > 0)
-      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | string | regex_search('^[0-9]+$'))
+      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | string is match('^[0-9]+$'))
       - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | int >= 1 and alfred_cassandra_api_mqtt_port | int <= 65535)
     fail_msg: alfred_cassandra_api must be empty or MQTT; MQTT requires a non-empty broker server and TCP port 1-65535.
   tags: [services, cassandra]
