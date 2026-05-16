@@ -96,6 +96,46 @@ Ansible writes these values into CaSSAndRA's `commcfg.json` and also exposes
 them as container environment variables for image versions that support env-based
 overrides; no manual JSON edits are required on the mower.
 
+
+## WiFi status LED
+
+The role deploys `wifi-led.service`, a small OS-level daemon that drives the mower
+WiFi indicator from NetworkManager state. The default backend is `panel`, which
+uses the external mower panel LED 1 on the PCA9555 expander. `act` is available
+as a single-color fallback using the Raspberry Pi `ACT` LED blink patterns.
+
+Status semantics:
+
+| State | Panel backend | ACT fallback | Meaning |
+|---|---|---|---|
+| green | green on | solid | WiFi connected, default route present, RSSI above threshold |
+| orange | red + green on | slow blink | WiFi connected but degraded, e.g. weak RSSI, no default route, or optional health host unreachable |
+| red | red on | fast blink | Interface missing, disconnected, or NetworkManager reports a non-connected state |
+
+Hardware capability validated on 2026-05-16:
+
+| Rover | LED backend | I2C bus | Expander | LED 1 channels |
+|---|---|---|---|---|
+| batman | panel | `/dev/i2c-1` | mux `0x70` channel 0, PCA9555 `0x22` | green P0.0, red P0.1 |
+| alfred | panel | `/dev/i2c-1` | mux `0x70` channel 0, PCA9555 `0x22` | green P0.0, red P0.1 |
+| robin | panel | `/dev/i2c-1` | mux `0x70` channel 0, PCA9555 `0x22` | green P0.0, red P0.1 |
+
+Useful validation commands on a mower:
+
+```bash
+sudo systemctl status wifi-led.service
+sudo journalctl -u wifi-led.service -n 50 --no-pager
+sudo WIFI_LED_BACKEND=panel /usr/local/bin/alfred-wifi-led --once --print-status
+```
+
+Only run NetworkManager disconnect/reconnect tests from a local console, because
+remote SSH over WiFi will drop:
+
+```bash
+sudo nmcli dev disconnect wlan0
+sudo nmcli dev connect wlan0
+```
+
 ## Usage
 
 ```bash

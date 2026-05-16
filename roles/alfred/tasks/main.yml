@@ -168,12 +168,49 @@
     replace: "cfg80211.ieee80211_regdom={{ alfred_wifi_regdomain }}"
   tags: [tuning]
 
-- name: Deploy WiFi LED indicator service
+- name: Validate WiFi LED indicator configuration
+  ansible.builtin.assert:
+    that:
+      - alfred_wifi_led_backend in ["panel", "act", "disabled"]
+      - alfred_wifi_led_interval | int >= 1
+      - alfred_wifi_led_panel_mux_channel | int >= -1 and alfred_wifi_led_panel_mux_channel | int <= 7
+      - alfred_wifi_led_panel_green_port | int in [0, 1]
+      - alfred_wifi_led_panel_red_port | int in [0, 1]
+      - alfred_wifi_led_panel_green_pin | int >= 0 and alfred_wifi_led_panel_green_pin | int <= 7
+      - alfred_wifi_led_panel_red_pin | int >= 0 and alfred_wifi_led_panel_red_pin | int <= 7
+  tags: [tuning]
+
+- name: Deploy WiFi LED indicator daemon
   ansible.builtin.copy:
-    src: wifi-led.service
+    src: alfred-wifi-led.py
+    dest: /usr/local/bin/alfred-wifi-led
+    mode: "0755"
+  notify: Restart wifi-led
+  when:
+    - alfred_wifi_led_enabled | bool
+    - alfred_wifi_led_backend != "disabled"
+  tags: [tuning]
+
+- name: Deploy WiFi LED indicator environment
+  ansible.builtin.template:
+    src: wifi-led.env.j2
+    dest: "{{ alfred_wifi_led_env_file }}"
+    mode: "0644"
+  notify: Restart wifi-led
+  when:
+    - alfred_wifi_led_enabled | bool
+    - alfred_wifi_led_backend != "disabled"
+  tags: [tuning]
+
+- name: Deploy WiFi LED indicator service
+  ansible.builtin.template:
+    src: wifi-led.service.j2
     dest: /etc/systemd/system/wifi-led.service
     mode: "0644"
   notify: Reload systemd
+  when:
+    - alfred_wifi_led_enabled | bool
+    - alfred_wifi_led_backend != "disabled"
   tags: [tuning]
 
 - name: Enable WiFi LED indicator service
@@ -182,6 +219,19 @@
     enabled: true
     state: started
     daemon_reload: true
+  when:
+    - alfred_wifi_led_enabled | bool
+    - alfred_wifi_led_backend != "disabled"
+  tags: [tuning]
+
+- name: Disable WiFi LED indicator service
+  ansible.builtin.systemd:
+    name: wifi-led.service
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  failed_when: false
+  when: not (alfred_wifi_led_enabled | bool) or alfred_wifi_led_backend == "disabled"
   tags: [tuning]
 
 # --- OpenOCD / MCU ---

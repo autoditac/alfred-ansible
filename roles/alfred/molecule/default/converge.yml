@@ -29,6 +29,24 @@
         dest: /tmp/alfred-ansible-molecule-default/cassandra.container
         mode: "0644"
 
+    - name: Copy the WiFi LED daemon
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../files/alfred-wifi-led.py"
+        dest: /tmp/alfred-ansible-molecule-default/alfred-wifi-led
+        mode: "0755"
+
+    - name: Render the WiFi LED environment template
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../templates/wifi-led.env.j2"
+        dest: /tmp/alfred-ansible-molecule-default/wifi-led.env
+        mode: "0644"
+
+    - name: Render the WiFi LED service template
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../templates/wifi-led.service.j2"
+        dest: /tmp/alfred-ansible-molecule-default/wifi-led.service
+        mode: "0644"
+
     - name: Render the CaSSAndRA MQTT API credential environment file
       ansible.builtin.copy:
         dest: /tmp/alfred-ansible-molecule-default/cassandra-mqtt-api.env
