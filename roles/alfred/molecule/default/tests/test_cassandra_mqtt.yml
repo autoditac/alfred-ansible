@@ -49,8 +49,8 @@
     - name: Assert credentials are rendered only in the private environment file
       ansible.builtin.assert:
         that:
-          - (cassandra_mqtt_env_file.content | b64decode) is search('CASSANDRA_API_MQTT_USERNAME="batman"')
-          - (cassandra_mqtt_env_file.content | b64decode) is search('CASSANDRA_API_MQTT_PASSWORD="test-secret"')
+          - (cassandra_mqtt_env_file.content | b64decode) is search('CASSANDRA_API_MQTT_USERNAME=batman')
+          - (cassandra_mqtt_env_file.content | b64decode) is search('CASSANDRA_API_MQTT_PASSWORD=test-secret')
 
     - name: Write sample CaSSAndRA commcfg
       ansible.builtin.copy:

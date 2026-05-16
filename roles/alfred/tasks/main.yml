@@ -226,10 +226,10 @@
     mode: "0600"
     content: |
       {% if alfred_cassandra_api_mqtt_username | default('') | string | length > 0 %}
-      CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username | string | to_json }}
+      CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username | string }}
       {% endif %}
       {% if alfred_cassandra_api_mqtt_password | default('') | string | length > 0 %}
-      CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password | string | to_json }}
+      CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password | string }}
       {% endif %}
   when: alfred_cassandra_api | default('') | string == 'MQTT'
   no_log: true  # MQTT credentials are sensitive
