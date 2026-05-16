@@ -54,7 +54,9 @@ ssh-copy-id <username>@<mower>.local
 | `security` | Enable unattended security updates and a 03:00 reboot window on opted-in hosts |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
-| `gps` | Install ubxtool, mask gpsd, persist the u-blox F9P receiver profile (requires HPG 1.32 firmware) |
+| `gps` | Install ubxtool, mask gpsd, persist the u-blox F9P receiver profile (requires HPG 1.51 firmware) |
+| `f9p-preflight` | Explicit u-blox F9P firmware preflight: deploy tools, verify image, probe receiver |
+| `f9p-flash` | Explicit u-blox F9P firmware updater; dry-run by default and never part of normal deploys |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
 | `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |
@@ -89,18 +91,76 @@ ansible-playbook -i inventory.yml site.yml --limit <mower> --tags firmware \
   -e alfred_firmware_bin=/tmp/rm18-build/rm18.ino.bin
 ```
 
+## u-blox F9P firmware maintenance
+
+Alfred mowers use a u-blox ZED-F9P receiver. The expected rover firmware
+baseline is **HPG 1.51**. Firmware flashing is intentionally excluded from
+normal deploys and from the `gps` tag; it only runs when the operator requests
+`f9p-flash` and passes explicit confirmation variables.
+
+The role vendors the upstream Linux updater from Sunray and the HPG 1.51 image:
+
+- `UBX_F9_100_HPG151_ZED_F9P.6c43b30ccfed539322eccedfb96ad933.bin`
+- size: `1354632`
+- sha256: `f1ba0e4eb7c79fd15a04c7d9033fc58d89aec77335f7e7cdf7e6669280803831`
+
+Run the preflight on batman first. This copies the updater tools, verifies the
+firmware image, stops Sunray only while probing the receiver, records probe
+output, and starts Sunray again:
+
+```bash
+ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-preflight
+```
+
+A flash request without confirmation fails before touching the receiver:
+
+```bash
+ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash
+```
+
+Dry-run is the default even with confirmation:
+
+```bash
+ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash \
+  -e alfred_f9p_flash_confirm=true
+```
+
+A real flash requires both confirmation and `alfred_f9p_flash_dry_run=false`:
+
+```bash
+ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash \
+  -e alfred_f9p_flash_confirm=true \
+  -e alfred_f9p_flash_dry_run=false
+```
+
+After a successful firmware update, reapply the persistent receiver profile:
+
+```bash
+ansible-playbook -i inventory.yml site.yml --limit batman --tags gps
+```
+
+Failure and recovery notes:
+
+- Keep the mower powered during flashing; power loss may require u-blox safeboot
+  recovery.
+- Sunray and gpsd must not hold the receiver. The role stops Sunray around probe
+  and flash operations and keeps gpsd masked.
+- Prefer a stable `/dev/serial/by-id/...u-blox...` device path when available.
+- If USB flashing leaves the receiver unreachable, use the upstream safeboot
+  recovery procedure: disconnect USB, connect a UART adapter to RX1/TX1/GND/5V,
+  hold `SAFEBOOT_N` low during power-on, then retry the explicit flash command.
+
 ## u-blox F9P receiver firmware and configuration
 
 Alfred mowers expect a u-blox ZED-F9P receiver running firmware
-`FWVER=HPG 1.32` (`PROTVER=27.31`). Sunray's GNSS parsing and the receiver
+`FWVER=HPG 1.51` (`PROTVER=27.50`). Sunray's GNSS parsing and the receiver
 configuration managed by this role have been validated against that firmware
 version.
 
-Flash the u-blox firmware manually with a u-blox-compatible updater before
-running the Ansible `gps` tag. The Ansible role does **not** flash GNSS receiver
-firmware; the `firmware` tag in this role is for the STM32 mower MCU only.
-After flashing or replacing the receiver, run the `gps` tag again because the
-u-blox updater resets receiver configuration.
+Use the `f9p-preflight` and `f9p-flash` tags above for GNSS receiver firmware
+maintenance. The `firmware` tag in this role is still only for the STM32 mower
+MCU. After flashing or replacing the receiver, run the `gps` tag again because
+the u-blox updater resets receiver configuration.
 
 Verify the receiver firmware on the mower with:
 
@@ -111,8 +171,8 @@ ubxtool -f /dev/ttyACM0 -p MON-VER | grep -E 'FWVER|PROTVER|MOD'
 Expected output includes:
 
 ```text
-FWVER=HPG 1.32
-PROTVER=27.31
+FWVER=HPG 1.51
+PROTVER=27.50
 MOD=ZED-F9P
 ```
 

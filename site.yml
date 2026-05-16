@@ -13,6 +13,9 @@
 #   openocd   - Deploy OpenOCD SWD configs
 #   services  - Deploy Podman Quadlet service files
 #   firmware  - Flash MCU firmware (requires pre-built .bin)
+#   gps       - Persist u-blox F9P receiver profile (no firmware flashing)
+#   f9p-preflight - Deploy/probe u-blox firmware updater tooling
+#   f9p-flash - Explicit u-blox F9P firmware flash; dry-run unless confirmed
 
 - name: Alfred mower setup
   hosts: mowers
