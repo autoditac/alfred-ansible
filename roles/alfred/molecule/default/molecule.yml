@@ -11,6 +11,18 @@ provisioner:
       batman:
         ansible_connection: local
         ansible_become: false
+        ansible_user: pi
+        alfred_timezone: Europe/Copenhagen
+        alfred_cassandra_image: ghcr.io/autoditac/cassandra
+        alfred_cassandra_image_tag: latest
+        alfred_cassandra_api: MQTT
+        alfred_cassandra_api_mqtt_server: mqtt.example.test
+        alfred_cassandra_api_mqtt_port: 1884
+        alfred_cassandra_api_mqtt_username: batman
+        alfred_cassandra_api_mqtt_password: test-secret
+        alfred_cassandra_api_mqtt_client_id: cassandra-batman
+        alfred_cassandra_api_mqtt_server_name: batman
+        alfred_cassandra_api_mqtt_env_file: /tmp/alfred-ansible-molecule-default/cassandra-mqtt-api.env
         alfred_enable_security_updates: true
         alfred_packages:
           - podman
