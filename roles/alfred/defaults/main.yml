@@ -87,6 +87,24 @@ alfred_f9p_uart1_baudrate: 115200
 alfred_f9p_uart2_baudrate: 115200
 alfred_f9p_state_dir: /var/lib/alfred
 alfred_f9p_config_layers: 7
+
+# u-blox F9P firmware update tooling. Firmware flashing is never part of a
+# normal deploy; it only runs with the explicit f9p-flash tag and confirmation.
+alfred_f9p_tool_dir: /opt/alfred/ublox_f9p
+alfred_f9p_expected_firmware: HPG 1.51
+alfred_f9p_default_firmware_file: UBX_F9_100_HPG151_ZED_F9P.6c43b30ccfed539322eccedfb96ad933.bin
+alfred_f9p_firmware_file: "{{ alfred_f9p_default_firmware_file }}"
+alfred_f9p_firmware_sha256: f1ba0e4eb7c79fd15a04c7d9033fc58d89aec77335f7e7cdf7e6669280803831
+alfred_f9p_firmware_size: 1354632
+alfred_f9p_probe_baud: 9600
+alfred_f9p_flash_baud: "9600:9600:115200"
+alfred_f9p_verbose: 1
+alfred_f9p_flash_confirm: false
+alfred_f9p_flash_dry_run: true
+alfred_f9p_allow_non_batman: false
+alfred_f9p_allow_unexpected_firmware: false
+alfred_f9p_process_pattern: /opt/sunray/sunray
+
 alfred_f9p_config:
   # Keep hardware interfaces in the same state Sunray used to configure at
   # startup. Sunray now only consumes the receiver data stream.
