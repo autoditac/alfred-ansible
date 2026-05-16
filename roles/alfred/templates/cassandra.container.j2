@@ -17,7 +17,7 @@ Environment=CASSANDRA_API_MQTT_CLIENT_ID={{ (alfred_cassandra_api_mqtt_client_id
 Environment=CASSANDRA_API_MQTT_SERVER={{ alfred_cassandra_api_mqtt_server | string | to_json }}
 Environment=CASSANDRA_API_MQTT_PORT={{ alfred_cassandra_api_mqtt_port }}
 Environment=CASSANDRA_API_MQTT_SERVER_NAME={{ (alfred_cassandra_api_mqtt_server_name | default('') or inventory_hostname) | string | to_json }}
-EnvironmentFile=-{{ alfred_cassandra_api_mqtt_env_file }}
+EnvironmentFile={{ alfred_cassandra_api_mqtt_env_file }}
 {% endif %}
 
 [Service]

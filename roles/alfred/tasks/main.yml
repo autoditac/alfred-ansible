@@ -436,7 +436,7 @@
     that:
       - (alfred_cassandra_api | default('') | string) in ['', 'MQTT']
       - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_server | default('') | string | trim | length > 0)
-      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | string | regex_search('^[0-9]+$'))
+      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | string is match('^[0-9]+$'))
       - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | int >= 1 and alfred_cassandra_api_mqtt_port | int <= 65535)
     fail_msg: alfred_cassandra_api must be empty or MQTT; MQTT requires a non-empty broker server and TCP port 1-65535.
   tags: [services, cassandra]

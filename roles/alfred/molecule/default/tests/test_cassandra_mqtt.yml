@@ -25,7 +25,7 @@
           - (cassandra_container.content | b64decode) is search('Environment=CASSANDRA_API_MQTT_SERVER="mqtt.example.test"')
           - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API_MQTT_PORT=1884")
           - (cassandra_container.content | b64decode) is search('Environment=CASSANDRA_API_MQTT_SERVER_NAME="batman"')
-          - (cassandra_container.content | b64decode) is search("EnvironmentFile=-/tmp/alfred-ansible-molecule-default/cassandra-mqtt-api.env")
+          - (cassandra_container.content | b64decode) is search("EnvironmentFile=/tmp/alfred-ansible-molecule-default/cassandra-mqtt-api.env")
           - not ((cassandra_container.content | b64decode) is search("CASSANDRA_API_MQTT_USERNAME"))
           - not ((cassandra_container.content | b64decode) is search("CASSANDRA_API_MQTT_PASSWORD"))
 
