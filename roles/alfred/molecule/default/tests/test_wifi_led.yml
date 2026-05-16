@@ -1,0 +1,77 @@
+---
+- name: Verify rendered WiFi LED service and daemon
+  when: not (test_mode | default(false))
+  block:
+    - name: Stat rendered WiFi LED artifacts
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /tmp/alfred-ansible-molecule-default/alfred-wifi-led
+        - /tmp/alfred-ansible-molecule-default/wifi-led.env
+        - /tmp/alfred-ansible-molecule-default/wifi-led.service
+      register: wifi_led_artifacts
+
+    - name: Assert WiFi LED artifacts exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+      loop: "{{ wifi_led_artifacts.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Read rendered WiFi LED environment and service
+      ansible.builtin.slurp:
+        path: "{{ item }}"
+      loop:
+        - /tmp/alfred-ansible-molecule-default/wifi-led.env
+        - /tmp/alfred-ansible-molecule-default/wifi-led.service
+      register: wifi_led_rendered
+
+    - name: Assert WiFi LED environment is rendered
+      ansible.builtin.assert:
+        that:
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_BACKEND=panel")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_INTERFACE=wlan0")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_I2C_BUS=/dev/i2c-1")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_I2C_ADDRESS=0x22")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_MUX_ADDRESS=0x70")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_MUX_CHANNEL=0")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_GREEN_PIN=0")
+          - (wifi_led_rendered.results[0].content | b64decode) is search("WIFI_LED_PANEL_RED_PIN=1")
+          - (wifi_led_rendered.results[1].content | b64decode) is search("EnvironmentFile=/tmp/alfred-ansible-molecule-default/wifi-led.env")
+          - (wifi_led_rendered.results[1].content | b64decode) is search("ExecStart=/usr/local/bin/alfred-wifi-led")
+
+    - name: Check WiFi LED daemon configuration parser
+      ansible.builtin.command:
+        argv:
+          - python3
+          - /tmp/alfred-ansible-molecule-default/alfred-wifi-led
+          - --check-config
+      environment:
+        WIFI_LED_BACKEND: panel
+        WIFI_LED_INTERFACE: wlan0
+        WIFI_LED_PANEL_I2C_ADDRESS: "0x22"
+        WIFI_LED_PANEL_MUX_ADDRESS: "0x70"
+        WIFI_LED_PANEL_MUX_CHANNEL: "0"
+      changed_when: false
+
+    - name: Run WiFi LED daemon once with disabled backend
+      ansible.builtin.command:
+        argv:
+          - python3
+          - /tmp/alfred-ansible-molecule-default/alfred-wifi-led
+          - --once
+          - --print-status
+      environment:
+        WIFI_LED_BACKEND: disabled
+        WIFI_LED_INTERFACE: lo
+      register: wifi_led_once
+      changed_when: false
+
+    - name: Assert WiFi LED daemon emits a status record
+      ansible.builtin.assert:
+        that:
+          - wifi_led_once.rc == 0
+          - (wifi_led_once.stdout | from_json).backend == "disabled"
+          - (wifi_led_once.stdout | from_json).status in ["green", "orange", "red"]

@@ -29,6 +29,21 @@ provisioner:
           - openocd
           - libgpiod3
         alfred_unattended_upgrades_reboot_time: "03:00"
+        alfred_wifi_led_backend: panel
+        alfred_wifi_led_interface: wlan0
+        alfred_wifi_led_interval: 2
+        alfred_wifi_led_require_default_route: true
+        alfred_wifi_led_degraded_rssi_dbm: -75
+        alfred_wifi_led_health_host: ""
+        alfred_wifi_led_env_file: /tmp/alfred-ansible-molecule-default/wifi-led.env
+        alfred_wifi_led_panel_i2c_bus: /dev/i2c-1
+        alfred_wifi_led_panel_i2c_address: "0x22"
+        alfred_wifi_led_panel_mux_address: "0x70"
+        alfred_wifi_led_panel_mux_channel: 0
+        alfred_wifi_led_panel_green_port: 0
+        alfred_wifi_led_panel_green_pin: 0
+        alfred_wifi_led_panel_red_port: 0
+        alfred_wifi_led_panel_red_pin: 1
 
 verifier:
   name: ansible

@@ -1,0 +1,14 @@
+[Unit]
+Description=Drive Alfred WiFi status LED
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=simple
+EnvironmentFile={{ alfred_wifi_led_env_file }}
+ExecStart=/usr/local/bin/alfred-wifi-led
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

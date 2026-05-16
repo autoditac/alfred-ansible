@@ -21,3 +21,10 @@
   ansible.builtin.systemd:
     name: cassandra.service
     state: restarted
+
+- name: Restart wifi-led
+  ansible.builtin.systemd:
+    name: wifi-led.service
+    state: restarted
+    daemon_reload: true
+  failed_when: false
