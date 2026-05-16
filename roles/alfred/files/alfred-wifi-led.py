@@ -204,8 +204,8 @@ class PanelBackend:
             return None
         original = i2c_read_byte(self.cfg.panel_bus, self.cfg.panel_mux_address)
         mask = 1 << self.cfg.panel_mux_channel
-        if (original & mask) == 0:
-            i2c_write_byte(self.cfg.panel_bus, self.cfg.panel_mux_address, original | mask)
+        if original != mask:
+            i2c_write_byte(self.cfg.panel_bus, self.cfg.panel_mux_address, mask)
         return original
 
     def _restore_mux(self, original):
