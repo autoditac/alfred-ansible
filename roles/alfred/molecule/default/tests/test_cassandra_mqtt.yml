@@ -1,0 +1,80 @@
+- name: Verify rendered CaSSAndRA MQTT API container environment
+  when: not (test_mode | default(false))
+  block:
+    - name: Stat rendered CaSSAndRA container unit
+      ansible.builtin.stat:
+        path: /tmp/alfred-ansible-molecule-default/cassandra.container
+      register: cassandra_container_stat
+
+    - name: Assert CaSSAndRA container unit exists
+      ansible.builtin.assert:
+        that:
+          - cassandra_container_stat.stat.exists
+          - cassandra_container_stat.stat.isreg
+
+    - name: Read rendered CaSSAndRA container unit
+      ansible.builtin.slurp:
+        path: /tmp/alfred-ansible-molecule-default/cassandra.container
+      register: cassandra_container
+
+    - name: Assert MQTT API environment is rendered
+      ansible.builtin.assert:
+        that:
+          - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API=MQTT")
+          - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API_MQTT_CLIENT_ID=cassandra-batman")
+          - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API_MQTT_SERVER=mqtt.example.test")
+          - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API_MQTT_PORT=1884")
+          - (cassandra_container.content | b64decode) is search("Environment=CASSANDRA_API_MQTT_SERVER_NAME=batman")
+
+    - name: Write sample CaSSAndRA commcfg
+      ansible.builtin.copy:
+        dest: /tmp/alfred-ansible-molecule-default/commcfg.json
+        mode: "0644"
+        content: |
+          {
+              "USE": "HTTP",
+              "MQTT": [],
+              "HTTP": [],
+              "UART": [],
+              "API": null,
+              "MQTT_API": [
+                  {"CLIENT_ID": "CaSSAndRA_api"},
+                  {"USERNAME": ""},
+                  {"PASSWORD": ""},
+                  {"MQTT_SERVER": "192.168.1.1"},
+                  {"PORT": 1883},
+                  {"API_SERVER_NAME": "myCaSSAndRA"}
+              ],
+              "MESSAGE_SERVICE": null,
+              "TELEGRAM": [],
+              "PUSHOVER": []
+          }
+
+    - name: Apply sample CaSSAndRA MQTT API config
+      ansible.builtin.command:
+        argv:
+          - /tmp/alfred-ansible-molecule-default/cassandra-mqtt-api-config
+          - /tmp/alfred-ansible-molecule-default/commcfg.json
+          - API=MQTT
+          - CLIENT_ID=cassandra-batman
+          - USERNAME=batman
+          - PASSWORD=test-secret
+          - MQTT_SERVER=mqtt.example.test
+          - PORT=1884
+          - API_SERVER_NAME=batman
+      register: cassandra_mqtt_config_result
+      changed_when: cassandra_mqtt_config_result.stdout | trim == "changed"
+
+    - name: Read patched sample CaSSAndRA commcfg
+      ansible.builtin.slurp:
+        path: /tmp/alfred-ansible-molecule-default/commcfg.json
+      register: cassandra_commcfg
+
+    - name: Assert sample CaSSAndRA MQTT API config was patched
+      ansible.builtin.assert:
+        that:
+          - (cassandra_commcfg.content | b64decode | from_json).API == "MQTT"
+          - (cassandra_commcfg.content | b64decode | from_json).MQTT_API[0].CLIENT_ID == "cassandra-batman"
+          - (cassandra_commcfg.content | b64decode | from_json).MQTT_API[3].MQTT_SERVER == "mqtt.example.test"
+          - (cassandra_commcfg.content | b64decode | from_json).MQTT_API[4].PORT == 1884
+          - (cassandra_commcfg.content | b64decode | from_json).MQTT_API[5].API_SERVER_NAME == "batman"

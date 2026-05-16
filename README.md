@@ -71,7 +71,30 @@ alfred_serial_login_enabled: false  # keep UART enabled for the MCU; disable ser
 alfred_f9p_device: /dev/ttyACM0
 alfred_f9p_uart1_baudrate: 115200
 alfred_f9p_uart2_baudrate: 115200
+
+# Optional CaSSAndRA MQTT API for CaSSAndRA Native. Use Ansible Vault for
+# broker credentials when authentication is enabled.
+alfred_cassandra_api: MQTT
+alfred_cassandra_api_mqtt_server: mqtt.example.test
+alfred_cassandra_api_mqtt_port: 1883
+alfred_cassandra_api_mqtt_username: alfred
+alfred_cassandra_api_mqtt_password: !vault |
+  ...
+alfred_cassandra_api_mqtt_server_name: alfred  # rover topic prefix
 ```
+
+With the MQTT API enabled, validate the broker topics from an operator machine:
+
+```bash
+mosquitto_sub -h <broker> -p 1883 -u <user> -P <password> -t 'alfred/#' -v
+mosquitto_pub -h <broker> -p 1883 -u <user> -P <password> \
+  -t 'alfred/api_cmd' \
+  -m '{"server":{"command":"sendMessage","value":["mqtt test"]}}'
+```
+
+Ansible writes these values into CaSSAndRA's `commcfg.json` and also exposes
+them as container environment variables for image versions that support env-based
+overrides; no manual JSON edits are required on the mower.
 
 ## Usage
 

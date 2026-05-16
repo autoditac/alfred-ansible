@@ -22,3 +22,15 @@
           dest: 20auto-upgrades
         - src: 52alfred-unattended-upgrades.j2
           dest: 52alfred-unattended-upgrades
+
+    - name: Render the CaSSAndRA container template
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../templates/cassandra.container.j2"
+        dest: /tmp/alfred-ansible-molecule-default/cassandra.container
+        mode: "0644"
+
+    - name: Copy CaSSAndRA MQTT API config script
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../files/cassandra-mqtt-api-config.py"
+        dest: /tmp/alfred-ansible-molecule-default/cassandra-mqtt-api-config
+        mode: "0755"

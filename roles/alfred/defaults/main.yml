@@ -21,6 +21,16 @@ alfred_dashboard_image_tag: latest
 alfred_cassandra_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
 
+# Optional CaSSAndRA MQTT API for CaSSAndRA Native. Leave alfred_cassandra_api
+# empty to keep the API disabled; set it to MQTT and provide a broker to enable.
+alfred_cassandra_api: ""
+alfred_cassandra_api_mqtt_server: ""
+alfred_cassandra_api_mqtt_port: 1883
+alfred_cassandra_api_mqtt_username: ""
+alfred_cassandra_api_mqtt_password: ""
+alfred_cassandra_api_mqtt_client_id: ""
+alfred_cassandra_api_mqtt_server_name: ""
+
 # Timezone applied to all alfred containers (cassandra, sunray, alfred-dashboard).
 # Override per host in inventory if needed.
 alfred_timezone: Europe/Copenhagen
