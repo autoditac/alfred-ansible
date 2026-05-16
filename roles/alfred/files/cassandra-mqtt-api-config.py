@@ -5,7 +5,9 @@ Usage:
     cassandra-mqtt-api-config PATH KEY=VALUE [KEY=VALUE ...]
 
 Supported keys: API, CLIENT_ID, USERNAME, PASSWORD, MQTT_SERVER, PORT,
-API_SERVER_NAME. Writes atomically and preserves file mode/uid/gid.
+API_SERVER_NAME. USERNAME and PASSWORD can also be supplied via the
+CASSANDRA_API_MQTT_USERNAME and CASSANDRA_API_MQTT_PASSWORD environment
+variables. Writes atomically and preserves file mode/uid/gid.
 
 Exits 0; prints 'changed' if the file was modified, 'unchanged' otherwise.
 """
@@ -29,8 +31,20 @@ for arg in sys.argv[2:]:
         print(f"error: unsupported key {key}", file=sys.stderr)
         sys.exit(2)
     if key == "PORT":
-        val = int(val)
+        try:
+            val = int(val)
+        except ValueError:
+            print(f"error: PORT must be an integer, got {val!r}", file=sys.stderr)
+            sys.exit(2)
     replacements[key] = val
+
+for key, env_name in (
+    ("USERNAME", "CASSANDRA_API_MQTT_USERNAME"),
+    ("PASSWORD", "CASSANDRA_API_MQTT_PASSWORD"),
+):
+    if env_name in os.environ:
+        replacements[key] = os.environ[env_name]
+
 
 with open(path) as f:
     data = json.load(f)

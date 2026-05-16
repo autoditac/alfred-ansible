@@ -30,6 +30,7 @@ alfred_cassandra_api_mqtt_username: ""
 alfred_cassandra_api_mqtt_password: ""
 alfred_cassandra_api_mqtt_client_id: ""
 alfred_cassandra_api_mqtt_server_name: ""
+alfred_cassandra_api_mqtt_env_file: /etc/alfred/cassandra-mqtt-api.env
 
 # Timezone applied to all alfred containers (cassandra, sunray, alfred-dashboard).
 # Override per host in inventory if needed.

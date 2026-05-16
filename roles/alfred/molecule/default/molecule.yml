@@ -22,6 +22,7 @@ provisioner:
         alfred_cassandra_api_mqtt_password: test-secret
         alfred_cassandra_api_mqtt_client_id: cassandra-batman
         alfred_cassandra_api_mqtt_server_name: batman
+        alfred_cassandra_api_mqtt_env_file: /tmp/alfred-ansible-molecule-default/cassandra-mqtt-api.env
         alfred_enable_security_updates: true
         alfred_packages:
           - podman

@@ -11,20 +11,13 @@ Volume=/home/{{ ansible_user }}/.cassandra:/data:Z
 AutoUpdate=registry
 PodmanArgs=--init
 Environment=TZ={{ alfred_timezone }}
-{% if alfred_cassandra_api | default('') | string | length > 0 %}
-Environment=CASSANDRA_API={{ alfred_cassandra_api }}
-Environment=CASSANDRA_API_MQTT_CLIENT_ID={{ alfred_cassandra_api_mqtt_client_id | default('') or 'cassandra-' ~ inventory_hostname }}
-{% if alfred_cassandra_api_mqtt_username | default('') | string | length > 0 %}
-Environment=CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username }}
-{% endif %}
-{% if alfred_cassandra_api_mqtt_password | default('') | string | length > 0 %}
-Environment=CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password }}
-{% endif %}
-{% if alfred_cassandra_api_mqtt_server | default('') | string | length > 0 %}
-Environment=CASSANDRA_API_MQTT_SERVER={{ alfred_cassandra_api_mqtt_server }}
-{% endif %}
+{% if alfred_cassandra_api | default('') | string == 'MQTT' %}
+Environment=CASSANDRA_API={{ alfred_cassandra_api | string | to_json }}
+Environment=CASSANDRA_API_MQTT_CLIENT_ID={{ (alfred_cassandra_api_mqtt_client_id | default('') or 'cassandra-' ~ inventory_hostname) | string | to_json }}
+Environment=CASSANDRA_API_MQTT_SERVER={{ alfred_cassandra_api_mqtt_server | string | to_json }}
 Environment=CASSANDRA_API_MQTT_PORT={{ alfred_cassandra_api_mqtt_port }}
-Environment=CASSANDRA_API_MQTT_SERVER_NAME={{ alfred_cassandra_api_mqtt_server_name | default('') or inventory_hostname }}
+Environment=CASSANDRA_API_MQTT_SERVER_NAME={{ (alfred_cassandra_api_mqtt_server_name | default('') or inventory_hostname) | string | to_json }}
+EnvironmentFile=-{{ alfred_cassandra_api_mqtt_env_file }}
 {% endif %}
 
 [Service]

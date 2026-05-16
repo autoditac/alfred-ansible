@@ -208,6 +208,34 @@
     - save-firmware.ocd.j2
   tags: [openocd]
 
+- name: Ensure Alfred private config directory exists
+  ansible.builtin.file:
+    path: "{{ alfred_cassandra_api_mqtt_env_file | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: alfred_cassandra_api | default('') | string == 'MQTT'
+  tags: [services, cassandra]
+
+- name: Deploy CaSSAndRA MQTT API credential environment file
+  ansible.builtin.copy:
+    dest: "{{ alfred_cassandra_api_mqtt_env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+    content: |
+      {% if alfred_cassandra_api_mqtt_username | default('') | string | length > 0 %}
+      CASSANDRA_API_MQTT_USERNAME={{ alfred_cassandra_api_mqtt_username | string | to_json }}
+      {% endif %}
+      {% if alfred_cassandra_api_mqtt_password | default('') | string | length > 0 %}
+      CASSANDRA_API_MQTT_PASSWORD={{ alfred_cassandra_api_mqtt_password | string | to_json }}
+      {% endif %}
+  when: alfred_cassandra_api | default('') | string == 'MQTT'
+  no_log: true  # MQTT credentials are sensitive
+  notify: Restart cassandra
+  tags: [services, cassandra]
+
 - name: Deploy templated CaSSAndRA Quadlet
   ansible.builtin.template:
     src: cassandra.container.j2
@@ -406,9 +434,11 @@
 - name: Validate CaSSAndRA MQTT API broker configuration
   ansible.builtin.assert:
     that:
-      - alfred_cassandra_api != 'MQTT' or (alfred_cassandra_api_mqtt_server | string | length > 0)
-    fail_msg: alfred_cassandra_api=MQTT requires alfred_cassandra_api_mqtt_server.
-  when: alfred_cassandra_api | default('') | string | length > 0
+      - (alfred_cassandra_api | default('') | string) in ['', 'MQTT']
+      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_server | default('') | string | trim | length > 0)
+      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | string | regex_search('^[0-9]+$'))
+      - (alfred_cassandra_api | default('') | string) != 'MQTT' or (alfred_cassandra_api_mqtt_port | int >= 1 and alfred_cassandra_api_mqtt_port | int <= 65535)
+    fail_msg: alfred_cassandra_api must be empty or MQTT; MQTT requires a non-empty broker server and TCP port 1-65535.
   tags: [services, cassandra]
 
 - name: Apply CaSSAndRA MQTT API config to commcfg.json (idempotent)
@@ -418,16 +448,17 @@
       - "/home/{{ ansible_user }}/.cassandra/user/commcfg.json"
       - "API={{ alfred_cassandra_api }}"
       - "CLIENT_ID={{ alfred_cassandra_api_mqtt_client_id | default('') or 'cassandra-' ~ inventory_hostname }}"
-      - "USERNAME={{ alfred_cassandra_api_mqtt_username }}"
-      - "PASSWORD={{ alfred_cassandra_api_mqtt_password }}"
       - "MQTT_SERVER={{ alfred_cassandra_api_mqtt_server }}"
       - "PORT={{ alfred_cassandra_api_mqtt_port }}"
       - "API_SERVER_NAME={{ alfred_cassandra_api_mqtt_server_name | default('') or inventory_hostname }}"
+  environment:
+    CASSANDRA_API_MQTT_USERNAME: "{{ alfred_cassandra_api_mqtt_username }}"
+    CASSANDRA_API_MQTT_PASSWORD: "{{ alfred_cassandra_api_mqtt_password }}"
   register: alfred_cassandra_mqtt_api_fix
   changed_when: alfred_cassandra_mqtt_api_fix.stdout | trim == "changed"
   when:
     - alfred_cassandra_commcfg.stat.exists | default(false)
-    - alfred_cassandra_api | default('') | string | length > 0
+    - alfred_cassandra_api | default('') | string == 'MQTT'
   no_log: true  # MQTT credentials are sensitive
   notify: Restart cassandra
   tags: [services, cassandra]
