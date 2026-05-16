@@ -251,12 +251,19 @@
           - "{{ alfred_f9p_verbose | string }}"
       register: alfred_f9p_probe
       changed_when: false
+
+    - name: Mark F9P probe ready for firmware flash
+      ansible.builtin.set_fact:
+        alfred_f9p_probe_ready_for_flash: true
   always:
     - name: Ensure sunray is started after F9P firmware probe
       ansible.builtin.systemd:
         name: sunray.service
         state: started
       changed_when: false
+      when: >-
+        'f9p-flash' not in ansible_run_tags
+        or not (alfred_f9p_probe_ready_for_flash | default(false) | bool)
   tags: [never, f9p-preflight, f9p-flash]
 
 - name: Record u-blox F9P preflight probe output
