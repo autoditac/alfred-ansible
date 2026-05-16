@@ -54,10 +54,11 @@ ssh-copy-id <username>@<mower>.local
 | `security` | Enable unattended security updates and a 03:00 reboot window on opted-in hosts |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
+| `gps` | Install ubxtool, mask gpsd, persist the u-blox F9P receiver profile (requires HPG 1.32 firmware) |
 | `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
 | `openocd` | Deploy SWD config (auto-selects GPIO driver/pins per board type) |
 | `services` | Deploy Podman Quadlet files (sunray, cassandra, dashboard), enable services |
-| `firmware` | Backup + flash MCU firmware (when `alfred_firmware_bin` is set) |
+| `firmware` | Backup + flash STM32 MCU firmware (when `alfred_firmware_bin` is set); does not flash u-blox GNSS firmware |
 
 ## Inventory variables
 
@@ -65,6 +66,10 @@ ssh-copy-id <username>@<mower>.local
 alfred_board: rpi4        # rpi4 | bananapi
 alfred_mcu: main          # main | perimeter (selects SRST pin)
 alfred_enable_security_updates: true
+alfred_serial_login_enabled: false  # keep UART enabled for the MCU; disable serial login console
+alfred_f9p_device: /dev/ttyACM0
+alfred_f9p_uart1_baudrate: 115200
+alfred_f9p_uart2_baudrate: 115200
 ```
 
 ## Usage
@@ -76,10 +81,50 @@ ansible-playbook -i inventory.yml site.yml --limit <mower>
 # Just deploy services
 ansible-playbook -i inventory.yml site.yml --limit <mower> --tags services
 
+# Reapply persistent u-blox F9P receiver configuration after GNSS firmware work
+ansible-playbook -i inventory.yml site.yml --limit <mower> --tags gps
+
 # Flash MCU firmware (provide pre-compiled .bin)
 ansible-playbook -i inventory.yml site.yml --limit <mower> --tags firmware \
   -e alfred_firmware_bin=/tmp/rm18-build/rm18.ino.bin
 ```
+
+## u-blox F9P receiver firmware and configuration
+
+Alfred mowers expect a u-blox ZED-F9P receiver running firmware
+`FWVER=HPG 1.32` (`PROTVER=27.31`). Sunray's GNSS parsing and the receiver
+configuration managed by this role have been validated against that firmware
+version.
+
+Flash the u-blox firmware manually with a u-blox-compatible updater before
+running the Ansible `gps` tag. The Ansible role does **not** flash GNSS receiver
+firmware; the `firmware` tag in this role is for the STM32 mower MCU only.
+After flashing or replacing the receiver, run the `gps` tag again because the
+u-blox updater resets receiver configuration.
+
+Verify the receiver firmware on the mower with:
+
+```bash
+ubxtool -f /dev/ttyACM0 -p MON-VER | grep -E 'FWVER|PROTVER|MOD'
+```
+
+Expected output includes:
+
+```text
+FWVER=HPG 1.32
+PROTVER=27.31
+MOD=ZED-F9P
+```
+
+The `gps` tag persists the Sunray-compatible F9P receiver profile to
+RAM | BBR | FLASH with `ubxtool`. The profile owns the receiver settings that
+Sunray previously wrote to RAM at startup: port enablement, UART/USB protocols,
+navigation filters, rates, and message outputs. Current Alfred Sunray builds run
+with `GPS_CONFIG=false`, so receiver configuration changes belong in this role
+rather than in the Sunray runtime.
+
+Override `alfred_f9p_config` per host only when a mower needs a different
+receiver profile.
 
 ## MCU compilation
 

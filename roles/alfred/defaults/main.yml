@@ -65,17 +65,181 @@ alfred_boot_config_lines:
   - usb_max_current_enable=1
   - dtparam=uart0=on
   - enable_uart=1
+  - dtparam=i2c_arm=on
+
+# Equivalent to raspi-config's serial settings for the mower:
+# keep the UART hardware enabled, but do not run a Linux login console on it.
+alfred_serial_login_enabled: false
+alfred_serial_console_kernel_regex: '^console=(serial0|ttyS0|ttyAMA0),'
+alfred_serial_getty_units:
+  - serial-getty@serial0.service
+  - serial-getty@ttyS0.service
 
 # MCU firmware binary (set via --extra-vars or leave empty to skip flash)
 alfred_firmware_bin: ""
 
 # u-blox F9P GPS receiver
-# Sunray GPS_CONFIG writes UART2 baudrate only to the RAM layer; on F9P reset
-# the receiver falls back to the FLASH default (38400) and stops decoding RTCM3.
-# This role persists the desired baudrate to RAM | BBR | FLASH (layers byte 0x07).
+# Firmware updates reset the receiver configuration. Keep the Sunray-required
+# receiver profile here so `--tags gps` can reapply it to RAM | BBR | FLASH
+# (layers byte 0x07) after an update or module reset.
 alfred_f9p_device: /dev/ttyACM0
+alfred_f9p_uart1_baudrate: 115200
 alfred_f9p_uart2_baudrate: 115200
 alfred_f9p_state_dir: /var/lib/alfred
+alfred_f9p_config_layers: 7
+alfred_f9p_config:
+  # Keep hardware interfaces in the same state Sunray used to configure at
+  # startup. Sunray now only consumes the receiver data stream.
+  - key: CFG-UART1-ENABLED
+    value: 1
+  - key: CFG-UART2-ENABLED
+    value: 1
+  - key: CFG-I2C-ENABLED
+    value: 0
+  - key: CFG-USB-ENABLED
+    value: 1
+
+  # UART1 is the Ardumower receiver data path kept for compatibility.
+  - key: CFG-UART1-BAUDRATE
+    value: "{{ alfred_f9p_uart1_baudrate }}"
+  - key: CFG-UART1INPROT-UBX
+    value: 1
+  - key: CFG-UART1INPROT-NMEA
+    value: 0
+  - key: CFG-UART1INPROT-RTCM3X
+    value: 0
+  - key: CFG-UART1OUTPROT-UBX
+    value: 1
+  - key: CFG-UART1OUTPROT-NMEA
+    value: 0
+  - key: CFG-UART1OUTPROT-RTCM3X
+    value: 0
+
+  # UART2 is the RTCM3 correction input path.
+  - key: CFG-UART2-BAUDRATE
+    value: "{{ alfred_f9p_uart2_baudrate }}"
+  - key: CFG-UART2INPROT-UBX
+    value: 0
+  - key: CFG-UART2INPROT-NMEA
+    value: 0
+  - key: CFG-UART2INPROT-RTCM3X
+    value: 1
+  - key: CFG-UART2OUTPROT-UBX
+    value: 0
+  - key: CFG-UART2OUTPROT-NMEA
+    value: 1
+  - key: CFG-UART2OUTPROT-RTCM3X
+    value: 0
+
+  # USB is the Sunray receiver data path. RTCM3 over USB stays disabled because
+  # corrections arrive through the receiver's external correction path.
+  - key: CFG-USBINPROT-UBX
+    value: 1
+  - key: CFG-USBINPROT-NMEA
+    value: 1
+  - key: CFG-USBINPROT-RTCM3X
+    value: 0
+  - key: CFG-USBOUTPROT-UBX
+    value: 1
+  - key: CFG-USBOUTPROT-NMEA
+    value: 0
+  - key: CFG-USBOUTPROT-RTCM3X
+    value: 0
+
+  # Sunray expects 5 Hz navigation updates and a 60 s DGNSS timeout.
+  - key: CFG-NAVSPG-FIXMODE
+    value: 3
+  - key: CFG-NAVSPG-INIFIX3D
+    value: 0
+  - key: CFG-NAVSPG-CONSTR_ALT
+    value: 10000
+  - key: CFG-RATE-MEAS
+    value: 200
+  - key: CFG-RATE-NAV
+    value: 1
+  - key: CFG-NAVSPG-INFIL_MINELEV
+    value: 10
+  - key: CFG-NAVSPG-INFIL_NCNOTHRS
+    value: 0
+  - key: CFG-NAVSPG-INFIL_CNOTHRS
+    value: 0
+  - key: CFG-NAVSPG-CONSTR_DGNSSTO
+    value: 60
+
+  # USB is the Sunray receiver data path.
+  - key: CFG-MSGOUT-UBX_NAV_RELPOSNED_USB
+    value: 1
+  - key: CFG-MSGOUT-UBX_NAV_HPPOSLLH_USB
+    value: 1
+  - key: CFG-MSGOUT-UBX_NAV_VELNED_USB
+    value: 1
+  - key: CFG-MSGOUT-UBX_RXM_RTCM_USB
+    value: 5
+  - key: CFG-MSGOUT-UBX_NAV_SIG_USB
+    value: 20
+  - key: CFG-MSGOUT-NMEA_ID_GGA_USB
+    value: 60
+  - key: CFG-MSGOUT-UBX_MON_COMMS_USB
+    value: 70
+  - key: CFG-MSGOUT-UBX_NAV_PVT_USB
+    value: 0
+  - key: CFG-MSGOUT-UBX_NAV_TIMEUTC_USB
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GSA_USB
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GLL_USB
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GSV_USB
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_RMC_USB
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_VTG_USB
+    value: 0
+
+  # UART1 mirrors the Sunray rover stream for boards that consume the receiver
+  # through the Ardumower serial path.
+  - key: CFG-MSGOUT-UBX_NAV_RELPOSNED_UART1
+    value: 1
+  - key: CFG-MSGOUT-UBX_NAV_HPPOSLLH_UART1
+    value: 1
+  - key: CFG-MSGOUT-UBX_NAV_VELNED_UART1
+    value: 1
+  - key: CFG-MSGOUT-UBX_RXM_RTCM_UART1
+    value: 5
+  - key: CFG-MSGOUT-UBX_NAV_SIG_UART1
+    value: 20
+  - key: CFG-MSGOUT-UBX_NAV_PVT_UART1
+    value: 0
+  - key: CFG-MSGOUT-UBX_NAV_TIMEUTC_UART1
+    value: 0
+
+  # UART2 emits only an occasional GGA sentence while accepting RTCM3 input.
+  - key: CFG-MSGOUT-NMEA_ID_GGA_UART2
+    value: 60
+  - key: CFG-MSGOUT-NMEA_ID_DTM_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GBS_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GLL_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GNS_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GRS_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GSA_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GST_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_GSV_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_RMC_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_VLW_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_VTG_UART2
+    value: 0
+  - key: CFG-MSGOUT-NMEA_ID_ZDA_UART2
+    value: 0
 
 # CaSSAndRA defaults (fix stock template values)
 # Stock CaSSAndRA ships with HTTP IP=http://192.168.1.1 and PASSWORD=null,
