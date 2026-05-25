@@ -6,6 +6,9 @@ all:
         localhost:
           ansible_connection: local
           ansible_user: "{{ lookup('env', 'USER') }}"
+          alfred_sunray_image_tag: beta
+          alfred_dashboard_image_tag: beta
+          alfred_cassandra_image_tag: beta
         batman:
           ansible_host: batman.local
           ansible_user: pi

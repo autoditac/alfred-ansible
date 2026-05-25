@@ -34,13 +34,13 @@ git clone https://github.com/autoditac/alfred-ansible.git
 cd alfred-ansible
 ```
 
-The inventory contains a generic `localhost` target for first runs. It keeps
-all rover settings on the role defaults and uses the current Linux user for
-paths such as `/home/{{ ansible_user }}/alfred-mcu`. For a fleet rover with
-host-specific image streams, dock coordinates, WiFi connection names, update
-schedules, or MQTT settings, add a named inventory entry and replace
-`localhost` in the commands below with that inventory host, for example
-`$(hostname)`.
+The inventory contains a generic `localhost` target for first runs. It uses
+the current Linux user for paths such as `/home/{{ ansible_user }}/alfred-mcu`
+and tracks the `beta` container image stream for Sunray, Alfred Dashboard, and
+CaSSAndRA. For a fleet rover with host-specific image streams, dock
+coordinates, WiFi connection names, update schedules, or MQTT settings, add a
+named inventory entry and replace `localhost` in the commands below with that
+inventory host, for example `$(hostname)`.
 
 Run the full setup locally:
 
