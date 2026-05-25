@@ -3,6 +3,9 @@ all:
   children:
     mowers:
       hosts:
+        localhost:
+          ansible_connection: local
+          ansible_user: "{{ lookup('env', 'USER') }}"
         batman:
           ansible_host: batman.local
           ansible_user: pi
@@ -14,20 +17,8 @@ all:
             - libgpiod3
           alfred_sunray_image_tag: alpha # tracking feature/min-wheel-clamp-during-dock for dock-approach clamp test
           alfred_dashboard_image_tag: alpha  # beta CI not yet available (PR #6 pending)
-          alfred_safe_update_on_calendar: "*-*-* 03:00:00"
+          alfred_safe_update_on_calendar: hourly
           alfred_enable_security_updates: true
-          alfred_dock_lat: 54.89599928
-          alfred_dock_lon: 9.56558693
-        alfred:
-          ansible_host: alfred.local
-          ansible_user: rouven
-          alfred_board: rpi4
-          alfred_mcu: main
-          alfred_sunray_image_tag: beta
-          alfred_dashboard_image_tag: latest
-          alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
-          alfred_enable_security_updates: true
-          alfred_wifi_connection: flottelotte
           alfred_dock_lat: 54.89599928
           alfred_dock_lon: 9.56558693
         robin:
@@ -36,7 +27,7 @@ all:
           alfred_board: rpi4
           alfred_mcu: main
           alfred_sunray_image_tag: beta
-          alfred_dashboard_image_tag: latest  # fallback until :beta image is available
+          alfred_dashboard_image_tag: beta
           alfred_safe_update_on_calendar: "Sun *-*-* 03:00:00"
           alfred_enable_security_updates: true
           alfred_wifi_connection: flottelotte

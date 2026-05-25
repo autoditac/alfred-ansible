@@ -3,32 +3,90 @@
 Configures a Raspberry Pi to run Alfred mower services as rootless Podman
 containers, managed by systemd Quadlet units.
 
+The normal deployment workflow runs **directly on the rover**. Log in to the
+mower, clone this repository there, install the small Ansible bootstrap set, and
+run the playbook with a local connection. This avoids depending on mDNS/SSH from
+an operator workstation while WiFi, NetworkManager, and firewall settings are
+being changed.
+
 ## Prerequisites
 
 - BananaPi on the Alfred replaced with Raspberry Pi 4B with 4 GB RAM
 - Debian Trixie (13) — Raspberry Pi OS Lite (64-bit) installed on the RPi4b
-- SSH access with passwordless sudo for the `ansible_user`
+- Shell access on the rover as the user that should own the Alfred runtime files
+- `sudo` access for that user; passwordless sudo is convenient for repeated runs,
+  but `--ask-become-pass` also works
 
-## System preparation
+## Bootstrap on the rover
 
-Before running the playbook, the `ansible_user` must exist on the target host
-and have passwordless sudo access. Run these commands once on the mower (as
-root or via the initial `pi` user):
+Log in to the rover locally or via SSH, then install the tools required to fetch
+the role and run Ansible on the same machine:
 
 ```bash
-# Create the user (skip if it already exists)
-useradd -m -s /bin/bash <username>
-passwd <username>
-
-# Grant passwordless sudo
-echo "<username> ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/<username>
-chmod 0440 /etc/sudoers.d/<username>
+sudo apt update
+sudo apt install -y git ansible-core python3-apt
 ```
 
-After that, copy your SSH public key so Ansible can connect without a password:
+Clone the deployment repository on the rover:
 
 ```bash
-ssh-copy-id <username>@<mower>.local
+git clone https://github.com/autoditac/alfred-ansible.git
+cd alfred-ansible
+```
+
+The inventory contains a generic `localhost` target for first runs. It keeps
+all rover settings on the role defaults and uses the current Linux user for
+paths such as `/home/{{ ansible_user }}/alfred-mcu`. For a fleet rover with
+host-specific image streams, dock coordinates, WiFi connection names, update
+schedules, or MQTT settings, add a named inventory entry and replace
+`localhost` in the commands below with that inventory host, for example
+`$(hostname)`.
+
+Run the full setup locally:
+
+```bash
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local \
+  --ask-become-pass
+```
+
+If the rover user already has passwordless sudo, omit `--ask-become-pass`:
+
+```bash
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local
+```
+
+### Optional: create a dedicated rover user
+
+If the OS image still uses an initial setup user and you want a dedicated runtime
+user, create it once on the mower before cloning the repository:
+
+```bash
+sudo useradd -m -s /bin/bash <username>
+sudo passwd <username>
+
+# Optional, for non-interactive Ansible runs
+echo "<username> ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/<username>
+sudo chmod 0440 /etc/sudoers.d/<username>
+```
+
+Log in as that user and run the bootstrap commands above. The generic
+`localhost` inventory entry derives `ansible_user` from the current `USER`
+environment variable. If you create a named rover entry instead, set
+`ansible_user` to the same username because the role uses that value for paths
+such as `/home/{{ ansible_user }}/alfred-mcu`.
+
+## Updating an existing rover
+
+For later runs, update the checkout first and rerun the playbook locally:
+
+```bash
+cd ~/alfred-ansible
+git pull --ff-only
+ansible-playbook -i inventory.yml site.yml --limit localhost --connection=local
 ```
 
 ## Differences from stock Ardumower/Sunray setup
@@ -72,7 +130,9 @@ alfred_f9p_device: /dev/ttyACM0
 alfred_f9p_uart1_baudrate: 115200
 alfred_f9p_uart2_baudrate: 115200
 
-# Optional CaSSAndRA MQTT API for CaSSAndRA Native. Use Ansible Vault for
+# Optional CaSSAndRA MQTT API for CaSSAndRA Native. MQTT is disabled by
+# default, including for the generic localhost target. Set these values on the
+# real rover host entry when the broker should be used; use Ansible Vault for
 # broker credentials when authentication is enabled.
 alfred_cassandra_api: MQTT
 alfred_cassandra_api_mqtt_server: mqtt.example.test
@@ -83,7 +143,8 @@ alfred_cassandra_api_mqtt_password: !vault |
 alfred_cassandra_api_mqtt_server_name: alfred  # rover topic prefix
 ```
 
-With the MQTT API enabled, validate the broker topics from an operator machine:
+With the MQTT API enabled for the selected inventory host, validate the broker
+topics from an operator machine:
 
 ```bash
 mosquitto_sub -h <broker> -p 1883 -u <user> -P <password> -t 'alfred/#' -v
@@ -138,18 +199,35 @@ sudo nmcli dev connect wlan0
 
 ## Usage
 
+The deployment examples below are intended to be run **on the rover itself**
+from the checked-out `alfred-ansible` directory. They use the generic
+`localhost` inventory target; replace it with a named rover target when you
+need host-specific variables. Add `--ask-become-pass` if the current user does
+not have passwordless sudo.
+
 ```bash
 # Full setup
-ansible-playbook -i inventory.yml site.yml --limit <mower>
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local
 
 # Just deploy services
-ansible-playbook -i inventory.yml site.yml --limit <mower> --tags services
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local \
+  --tags services
 
 # Reapply persistent u-blox F9P receiver configuration after GNSS firmware work
-ansible-playbook -i inventory.yml site.yml --limit <mower> --tags gps
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local \
+  --tags gps
 
-# Flash MCU firmware (provide pre-compiled .bin)
-ansible-playbook -i inventory.yml site.yml --limit <mower> --tags firmware \
+# Flash MCU firmware (provide a pre-compiled .bin copied onto the rover)
+ansible-playbook -i inventory.yml site.yml \
+  --limit localhost \
+  --connection=local \
+  --tags firmware \
   -e alfred_firmware_bin=/tmp/rm18-build/rm18.ino.bin
 ```
 
@@ -166,31 +244,45 @@ The role vendors the upstream Linux updater from Sunray and the HPG 1.51 image:
 - size: `1354632`
 - sha256: `f1ba0e4eb7c79fd15a04c7d9033fc58d89aec77335f7e7cdf7e6669280803831`
 
-Run the preflight on batman first. This copies the updater tools, verifies the
-firmware image, stops Sunray only while probing the receiver, records probe
-output, and starts Sunray again:
+Run the preflight on the rover first. This copies the updater tools, verifies
+the firmware image, stops Sunray only while probing the receiver, records
+probe output, and starts Sunray again. For a real F9P flash on batman, use the
+named `batman` inventory target rather than generic `localhost` so the safety
+check knows which mower is being flashed:
 
 ```bash
-ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-preflight
+ansible-playbook -i inventory.yml site.yml \
+  --limit batman \
+  --connection=local \
+  --tags f9p-preflight
 ```
 
 A flash request without confirmation fails before touching the receiver:
 
 ```bash
-ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash
+ansible-playbook -i inventory.yml site.yml \
+  --limit batman \
+  --connection=local \
+  --tags f9p-flash
 ```
 
 Dry-run is the default even with confirmation:
 
 ```bash
-ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash \
+ansible-playbook -i inventory.yml site.yml \
+  --limit batman \
+  --connection=local \
+  --tags f9p-flash \
   -e alfred_f9p_flash_confirm=true
 ```
 
 A real flash requires both confirmation and `alfred_f9p_flash_dry_run=false`:
 
 ```bash
-ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash \
+ansible-playbook -i inventory.yml site.yml \
+  --limit batman \
+  --connection=local \
+  --tags f9p-flash \
   -e alfred_f9p_flash_confirm=true \
   -e alfred_f9p_flash_dry_run=false
 ```
@@ -198,7 +290,10 @@ ansible-playbook -i inventory.yml site.yml --limit batman --tags f9p-flash \
 After a successful firmware update, reapply the persistent receiver profile:
 
 ```bash
-ansible-playbook -i inventory.yml site.yml --limit batman --tags gps
+ansible-playbook -i inventory.yml site.yml \
+  --limit batman \
+  --connection=local \
+  --tags gps
 ```
 
 Failure and recovery notes:

@@ -1,4 +1,8 @@
 ---
+# Generic hardware defaults. Override in inventory for non-RPi4 or perimeter MCU targets.
+alfred_board: rpi4
+alfred_mcu: main
+
 # System packages
 alfred_packages:
   - podman
