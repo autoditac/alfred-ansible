@@ -7,5 +7,6 @@
 
   tasks:
     - import_tasks: tests/test_security_updates.yml
+    - import_tasks: tests/test_journald_streams.yml
     - import_tasks: tests/test_cassandra_mqtt.yml
     - import_tasks: tests/test_wifi_led.yml

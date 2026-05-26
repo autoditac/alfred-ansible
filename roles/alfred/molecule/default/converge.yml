@@ -23,6 +23,27 @@
         - src: 52alfred-unattended-upgrades.j2
           dest: 52alfred-unattended-upgrades
 
+    - name: Render stream-specific journald templates
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../templates/journald.conf.j2"
+        dest: "/tmp/alfred-ansible-molecule-default/journald-{{ item.stream }}.conf"
+        mode: "0644"
+      vars:
+        alfred_observability_stream: "{{ item.stream }}"
+        alfred_observability_persistent_streams:
+          - alpha
+          - beta
+        alfred_journald_storage: "{{ 'persistent' if alfred_observability_stream in alfred_observability_persistent_streams else 'volatile' }}"
+        alfred_journald_max_level_store: "{{ 'debug' if alfred_observability_stream in alfred_observability_persistent_streams else 'info' }}"
+        alfred_journald_system_max_use: 500M
+        alfred_journald_system_keep_free: 50M
+        alfred_journald_system_max_file_size: 100M
+        alfred_journald_runtime_max_use: 64M
+      loop:
+        - stream: latest
+        - stream: alpha
+        - stream: beta
+
     - name: Render the CaSSAndRA container template
       ansible.builtin.template:
         src: "{{ playbook_dir }}/../../templates/cassandra.container.j2"

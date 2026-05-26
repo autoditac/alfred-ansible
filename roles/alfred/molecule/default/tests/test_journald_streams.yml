@@ -1,0 +1,39 @@
+---
+- name: Verify stream-specific journald rendering
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Read rendered latest journald config
+      ansible.builtin.slurp:
+        src: /tmp/alfred-ansible-molecule-default/journald-latest.conf
+      register: journald_latest
+
+    - name: Read rendered alpha journald config
+      ansible.builtin.slurp:
+        src: /tmp/alfred-ansible-molecule-default/journald-alpha.conf
+      register: journald_alpha
+
+    - name: Read rendered beta journald config
+      ansible.builtin.slurp:
+        src: /tmp/alfred-ansible-molecule-default/journald-beta.conf
+      register: journald_beta
+
+    - name: Assert latest uses volatile journal storage
+      ansible.builtin.assert:
+        that:
+          - (journald_latest.content | b64decode) is search('Storage=volatile')
+          - (journald_latest.content | b64decode) is search('RuntimeMaxUse=64M')
+          - (journald_latest.content | b64decode) is search('MaxLevelStore=info')
+          - not ((journald_latest.content | b64decode) is search('Storage=persistent'))
+          - not ((journald_latest.content | b64decode) is search('SystemMaxUse='))
+
+    - name: Assert alpha and beta use persistent diagnostic journal storage
+      ansible.builtin.assert:
+        that:
+          - (journald_alpha.content | b64decode) is search('Storage=persistent')
+          - (journald_alpha.content | b64decode) is search('SystemMaxUse=500M')
+          - (journald_alpha.content | b64decode) is search('MaxLevelStore=debug')
+          - (journald_beta.content | b64decode) is search('Storage=persistent')
+          - (journald_beta.content | b64decode) is search('SystemMaxUse=500M')
+          - (journald_beta.content | b64decode) is search('MaxLevelStore=debug')

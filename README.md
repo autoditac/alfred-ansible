@@ -110,7 +110,7 @@ ansible-playbook -i inventory.yml site.yml --limit localhost --connection=local
 |---|---|
 | `packages` | Install podman, openocd, libgpiod2 |
 | `security` | Enable unattended security updates and a 03:00 reboot window on opted-in hosts |
-| `logging` | Persistent journald storage on SD card, removal of the Raspberry Pi volatile-only override |
+| `logging` | Stream-aware journald storage: persistent for alpha/beta diagnostics, volatile for latest |
 | `tuning` | CPU performance governor, vm.swappiness, boot config (UART, USB power) |
 | `gps` | Install ubxtool, mask gpsd, persist the u-blox F9P receiver profile (requires HPG 1.51 firmware) |
 | `f9p-preflight` | Explicit u-blox F9P firmware preflight: deploy tools, verify image, probe receiver |
