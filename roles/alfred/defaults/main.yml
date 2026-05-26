@@ -106,7 +106,6 @@ alfred_journald_system_max_use: 500M
 alfred_journald_system_keep_free: 50M
 alfred_journald_system_max_file_size: 100M
 alfred_journald_runtime_max_use: 64M
-alfred_journald_rpi_volatile_override: /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
 
 alfred_boot_config_lines:
   - usb_max_current_enable=1
