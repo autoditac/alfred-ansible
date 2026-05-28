@@ -90,17 +90,20 @@
   when: alfred_journald_storage == "persistent"
   tags: [tuning, logging]
 
-- name: Remove legacy persistent journald drop-in
+- name: Remove legacy journald drop-ins
   ansible.builtin.file:
-    path: "{{ alfred_journald_config_dir }}/10-persistent.conf"
+    path: "{{ alfred_journald_config_dir }}/{{ item }}"
     state: absent
+  loop:
+    - 10-persistent.conf
+    - 10-alfred-journald.conf
   notify: Restart systemd-journald
   tags: [tuning, logging]
 
 - name: Deploy journald configuration
   ansible.builtin.template:
     src: journald.conf.j2
-    dest: "{{ alfred_journald_config_dir }}/10-alfred-journald.conf"
+    dest: "{{ alfred_journald_config_dir }}/90-alfred-journald.conf"
     owner: root
     group: root
     mode: "0644"
