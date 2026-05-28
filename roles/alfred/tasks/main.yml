@@ -80,19 +80,30 @@
     mode: "0755"
   tags: [tuning, logging]
 
-- name: Create persistent journal storage directory
+- name: Create persistent journal storage directory when enabled
   ansible.builtin.file:
     path: "{{ alfred_journald_storage_dir }}"
     state: directory
     owner: root
     group: systemd-journal
     mode: "2755"
+  when: alfred_journald_storage == "persistent"
   tags: [tuning, logging]
 
-- name: Deploy persistent journald configuration
+- name: Remove legacy journald drop-ins
+  ansible.builtin.file:
+    path: "{{ alfred_journald_config_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - 10-persistent.conf
+    - 10-alfred-journald.conf
+  notify: Restart systemd-journald
+  tags: [tuning, logging]
+
+- name: Deploy journald configuration
   ansible.builtin.template:
     src: journald.conf.j2
-    dest: "{{ alfred_journald_config_dir }}/10-persistent.conf"
+    dest: "{{ alfred_journald_config_dir }}/90-alfred-journald.conf"
     owner: root
     group: root
     mode: "0644"

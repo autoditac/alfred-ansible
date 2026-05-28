@@ -19,11 +19,20 @@ alfred_dashboard_image: ghcr.io/autoditac/alfred-dashboard
 alfred_cassandra_image: ghcr.io/autoditac/cassandra
 
 # Release stream tags (overridable per host in inventory)
-# Streams: latest (production default) | beta (batman test stream)
+# Streams: latest (production default) | beta (batman test stream) | alpha (feature testing)
 alfred_sunray_image_tag: latest
 alfred_dashboard_image_tag: latest
 alfred_cassandra_image_tag: latest
 alfred_safe_update_on_calendar: "*-*-* 03:00:00"
+
+# Observability profile. By default, derive host logging behavior from the
+# configured Sunray stream: alpha/beta keep diagnostic retention; latest keeps
+# logs in volatile storage and avoids debug-level retention. Override
+# alfred_observability_stream or the journald variables per host if needed.
+alfred_observability_stream: "{{ alfred_sunray_image_tag | default('latest') | string }}"
+alfred_observability_persistent_streams:
+  - alpha
+  - beta
 
 # Optional CaSSAndRA MQTT API for CaSSAndRA Native. Leave alfred_cassandra_api
 # empty to keep the API disabled; set it to MQTT and provide a broker to enable.
@@ -91,11 +100,12 @@ alfred_wifi_led_panel_red_pin: 1
 # Journald logging
 alfred_journald_config_dir: /etc/systemd/journald.conf.d
 alfred_journald_storage_dir: /var/log/journal
-alfred_journald_storage: persistent
+alfred_journald_storage: "{{ 'persistent' if alfred_observability_stream in alfred_observability_persistent_streams else 'volatile' }}"
+alfred_journald_max_level_store: "{{ 'debug' if alfred_observability_stream in alfred_observability_persistent_streams else 'info' }}"
 alfred_journald_system_max_use: 500M
 alfred_journald_system_keep_free: 50M
 alfred_journald_system_max_file_size: 100M
-alfred_journald_rpi_volatile_override: /usr/lib/systemd/journald.conf.d/40-rpi-volatile-storage.conf
+alfred_journald_runtime_max_use: 64M
 
 alfred_boot_config_lines:
   - usb_max_current_enable=1
